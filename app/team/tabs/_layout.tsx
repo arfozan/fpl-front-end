@@ -6,6 +6,7 @@ export default function TeamTabsLayout() {
       screenOptions={{
         headerShown: true, // show stack header if you want
         tabBarLabelStyle: { fontSize: 12 },
+        lazy: true,
       }}
     >
       <Tabs.Screen

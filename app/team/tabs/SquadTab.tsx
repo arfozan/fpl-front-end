@@ -33,6 +33,7 @@ interface TeamDetail {
   total_weekly_wage: number;
   forecast_end_balance: number;
   current_balance: number;
+  bonus_income: number;
   total_players: number;
   academy_players: number;
   players: Player[];
@@ -166,6 +167,7 @@ export default function SquadTab({ team }: { team: TeamDetail }) {
             <Text>Academy: {team.academy_players}</Text>
             <Text>Balance: {team.current_balance.toFixed(2)}</Text>
             <Text>Forecast: {team.forecast_end_balance.toFixed(2)}</Text>
+            <Text>Forecast: {team.bonus_income}</Text>
           </View>
           <View>
             <Image
