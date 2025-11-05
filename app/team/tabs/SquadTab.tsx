@@ -6,9 +6,10 @@ interface Player {
   id: number;
   full_name: string;
   position: string;
-  nationality: string;
+  club_name: string;
   photo: string;
   weekly_wage: number;
+  points: number;
   is_academy_player: boolean;
 }
 
@@ -103,10 +104,10 @@ export default function SquadTab({ team }: { team: TeamDetail }) {
           <View style={{ flex: 1 }}>
             <Text style={styles.playerName}>{item.full_name}</Text>
             <Text style={styles.playerInfo}>
-              {item.position} • {item.club_name || "Unknown"} • {item.points || 0} pts
+              {item.position} • {item.club_name || "Unknown"}
             </Text>
             <Text style={styles.playerWage}>
-              Wage: {item.weekly_wage.toFixed(3)}
+              Wage: {item.weekly_wage.toFixed(3)} • {item.points || 0} pts
             </Text>
           </View>
           </View>
@@ -172,7 +173,7 @@ export default function SquadTab({ team }: { team: TeamDetail }) {
           <View>
             <Image
             source={{ uri: team.manager_photo }}
-            style={{ width: 100, height: 100, borderRadius: 50, alignSelf: "center", marginBottom: 16, backgroundColor: '#25357cff'}}
+            style={{ width: 100, height: 100, borderRadius: 50, alignSelf: "center", marginBottom: 16, borderColor: "#3ca9b8ff", borderWidth: 2 }}
             resizeMode="contain"
             />
             <Text style={{ textAlign: "center", fontWeight: "600" }}>{team.manager_name}</Text>

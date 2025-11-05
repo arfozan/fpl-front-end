@@ -46,6 +46,7 @@ interface PlayerDetail {
   position: string;
   team_name: string;
   base_price: number;
+  points: number;
   contract_renew_bonus: number;
   contract_expiry: string | null;
   is_academy_player: boolean;
@@ -266,11 +267,15 @@ export default function PlayerDetailScreen() {
                 <Text style={styles.value}>{player.weekly_wage.toFixed(3)}M</Text>
               </View>
               <View style={styles.infoRow}>
+                <Text style={styles.label}>Fantasy Points</Text>
+                <Text style={styles.value}>{player.points}</Text>
+              </View>
+              <View style={styles.infoRow}>
                 <Text style={styles.label}>Full Season Wage</Text>
                 <Text style={styles.value}>{player.full_season_wage.toFixed(2)}M</Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.label}>Renew Bonus</Text>
+                <Text style={styles.label}>Contract Renew Cost</Text>
                 <Text style={styles.value}>{player.contract_renew_bonus}M</Text>
               </View>
               <View style={styles.infoRow}>

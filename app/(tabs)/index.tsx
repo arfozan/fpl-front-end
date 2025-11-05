@@ -253,10 +253,11 @@ export default function index() {
             </View>
             {user && teamInfo ? (
             <View>
-              <Text style={{ color: "#fff", textAlign: "right" }}>Welcome</Text>
-              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
-                {teamInfo.manager_name}
-              </Text>
+              <Image
+                source={{ uri: teamInfo.manager_photo }}
+                style={{ width: 50, height: 50, borderRadius: 25, marginTop: 5, alignSelf: "flex-end", borderColor: "#3ca9b8ff", borderWidth: 1.5 }}
+              />
+              <Text style={{ color: "#fff", textAlign: "right" }}>Welcome {teamInfo.manager_name}</Text>
             </View>
         ) : (
           <TouchableOpacity
