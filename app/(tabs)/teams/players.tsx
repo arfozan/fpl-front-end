@@ -1,12 +1,13 @@
+import { useThemeColors } from "@/theme/colors";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    FlatList,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { BASE_URL } from "../../../config";
 
@@ -20,6 +21,7 @@ interface Player {
 export default function PlayersScreen() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [search, setSearch] = useState("");
+  const colors = useThemeColors();
 
   useEffect(() => {
     fetch(`${BASE_URL}/api/players/`)
@@ -49,6 +51,7 @@ export default function PlayersScreen() {
     <View style={{ flex: 1 }}>
       <TextInput
         placeholder="Search players..."
+        placeholderTextColor={colors.placeholder}
         value={search}
         onChangeText={setSearch}
         style={styles.searchBox}

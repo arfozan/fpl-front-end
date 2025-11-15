@@ -10,7 +10,11 @@ export default function TeamTabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="MatchesTab"
+        name="team_overview"
+        options={{ title: "Matches" }}
+      />
+      <Tabs.Screen
+        name="Ma"
         options={{ title: "Matches" }}
       />
       <Tabs.Screen

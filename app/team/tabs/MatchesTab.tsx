@@ -1,4 +1,5 @@
 import { BASE_URL } from "@/config";
+import { useThemeColors } from "@/theme/colors";
 import { Picker } from "@react-native-picker/picker";
 import { useEffect, useState } from "react";
 import {
@@ -44,6 +45,7 @@ export default function MatchesTab({ teamId }: { teamId: string }) {
   const [stats, setStats] = useState<SeasonStat | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(false);
+  const colors = useThemeColors();
 
   useEffect(() => {
     fetchSeasons();
@@ -92,7 +94,7 @@ export default function MatchesTab({ teamId }: { teamId: string }) {
               ];
             })
           ).entries()
-        ).map(([id, name]) => ({ id: String(id), name })),
+        ).map(([id, name]) => ({ id: String(id), name: name as string })),
       ];
       setOpponents(opps);
     } catch (err) {
@@ -148,9 +150,11 @@ export default function MatchesTab({ teamId }: { teamId: string }) {
               selectedValue={selectedSeason}
               onValueChange={(val) => setSelectedSeason(val)}
               style={styles.picker}
+              dropdownIconColor="#000000ff"
+              prompt="Select Season"
             >
               {seasons.map((s) => (
-                <Picker.Item key={s.id} label={s.season_name} value={s.id} />
+                <Picker.Item key={s.id} label={s.season_name} value={s.id}/>
               ))}
             </Picker>
           </View>
@@ -165,6 +169,8 @@ export default function MatchesTab({ teamId }: { teamId: string }) {
                 selectedValue={selectedOpponent}
                 onValueChange={(val) => setSelectedOpponent(val)}
                 style={styles.picker}
+                dropdownIconColor="#000000ff"
+                prompt="Select Team"
               >
                 {opponents.map((opp) => (
                   <Picker.Item key={opp.id} label={opp.name} value={opp.id} />
@@ -218,7 +224,7 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: "600",
     marginTop: 8,
-    color: "#333",
+    color: "#555",
   },
   pickerBox: {
     backgroundColor: "#fff",
@@ -232,6 +238,7 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 50,
+    color: "#000",
   },
   statsBox: {
     backgroundColor: "#fff",

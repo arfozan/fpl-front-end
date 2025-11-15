@@ -166,35 +166,60 @@ export default function FreeAgents() {
 
           return (
             <View style={styles.card}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <View>
-                  <Text style={styles.playerName}>{item.full_name}</Text>
-                  <Text>Position: {item.position}</Text>
-                  <Text>Club: {item.club_name}</Text>
-                  <Text>Base: {item.base_price}M</Text>
-                  <Text>Points: {item.points}</Text>
-                  <Text style={{ marginTop: 4 }}>
-                    Current Bid:{" "}
-                    {item.current_bid ? `${item.current_bid}M` : "No bids yet"}
-                    {item.current_bid_team ? ` by ${item.current_bid_team}` : ""}
-                  </Text>
-                  <BidInput
-                    minBid={minBid}
-                    value={bidAmount[item.id] ?? null}
-                    onChange={(val) =>
-                  setBidAmount((prev) => ({ ...prev, [item.id]: val }))
-                }
-              />
-                </View>
-                <View style={{padding: 4, borderRadius: 8 }}>
-                  <Image
-                    source={{ uri: `${BASE_URL}${item.photo}` }}
-                    style={{ width: 120, height: 200, borderRadius:5}}
-                  />
-                </View>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <Text
+                  style={[styles.playerName, { flexShrink: 1 }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.full_name}
+                </Text>
+
+                <Text>Position: {item.position}</Text>
+                <Text>Club: {item.club_name}</Text>
+                <Text>Base: {item.base_price}M</Text>
+                <Text>Points: {item.points}</Text>
+
+                <Text style={{ marginTop: 4 }}>
+                  Current Bid:{" "}
+                  {item.current_bid ? `${item.current_bid}M` : "No bids yet"}
+                  {item.current_bid_team ? ` by ${item.current_bid_team}` : ""}
+                </Text>
+
+                <BidInput
+                  minBid={minBid}
+                  value={bidAmount[item.id] ?? null}
+                  onChange={(val) =>
+                    setBidAmount((prev) => ({ ...prev, [item.id]: val }))
+                  }
+                />
               </View>
-              <Button title="Place Bid" onPress={() => placeBid(item.id, minBid)} />
+              <View
+                style={{
+                  width: 120,
+                  height: 200,
+                  borderRadius: 8,
+                  overflow: "hidden",
+                }}
+              >
+                <Image
+                  source={{ uri: `${BASE_URL}${item.photo}` }}
+                  style={{ width: "100%", height: "100%", borderRadius: 5 }}
+                  resizeMode="cover"
+                />
+              </View>
             </View>
+
+  <Button title="Place Bid" onPress={() => placeBid(item.id, minBid)} />
+</View>
+
           );
         }}
       />

@@ -6,6 +6,7 @@ import { TabView } from "react-native-tab-view";
 
 import MatchesTab from "./tabs/MatchesTab";
 import SquadTab from "./tabs/SquadTab";
+import TeamOverview from "./tabs/team_overview";
 import TransfersTab from "./tabs/TransferTab";
 
 const initialLayout = { width: Dimensions.get("window").width };
@@ -18,6 +19,7 @@ export default function TeamDetailScreen() {
 
   const [index, setIndex] = useState(0);
   const [routes] = useState([
+    { key: "team_overview", title: "Summary" },
     { key: "team", title: "Squad" },
     { key: "transfers", title: "Transfers" },
     { key: "matches", title: "Matches" },
@@ -64,6 +66,8 @@ export default function TeamDetailScreen() {
 
   const renderScene = ({ route }: { route: { key: string } }) => {
     switch (route.key) {
+      case "team_overview":
+        return <TeamOverview teamId={id} />;
       case "team":
         return <SquadTab team={team} />;
       case "transfers":

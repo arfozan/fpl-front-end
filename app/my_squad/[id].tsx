@@ -52,6 +52,7 @@ interface PlayerDetail {
   is_academy_player: boolean;
   weekly_wage: number;
   full_season_wage: number;
+  bonus_earning: number
   transfer_history: Transfer[];
 }
 
@@ -267,12 +268,16 @@ export default function PlayerDetailScreen() {
                 <Text style={styles.value}>{player.weekly_wage.toFixed(3)}M</Text>
               </View>
               <View style={styles.infoRow}>
+                <Text style={styles.label}>Full Season Wage</Text>
+                <Text style={styles.value}>{player.full_season_wage.toFixed(2)}M</Text>
+              </View>
+              <View style={styles.infoRow}>
                 <Text style={styles.label}>Fantasy Points</Text>
                 <Text style={styles.value}>{player.points}</Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.label}>Full Season Wage</Text>
-                <Text style={styles.value}>{player.full_season_wage.toFixed(2)}M</Text>
+                <Text style={styles.label}>Bonus Earned: </Text>
+                <Text style={styles.value}>{player.bonus_earning}M</Text>
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.label}>Contract Renew Cost</Text>
@@ -335,8 +340,9 @@ export default function PlayerDetailScreen() {
                   setSelectedWindowId(itemValue === 0 ? null : Number(itemValue))
                 }
                 enabled={hasContractOpenWindow}
+                style={{color:'#8b8b8bff'}}
               >
-                <Picker.Item label="Select window..." value={0} />
+                <Picker.Item label="Select Contract Length..." value={0} />
                 {windows.map((w) => (
                   <Picker.Item
                     key={w.id}

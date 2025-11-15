@@ -13,7 +13,9 @@
       "supportsTablet": true
     },
     "android": {
-      "permissions": ["INTERNET"],
+      "permissions": [
+        "INTERNET"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -39,7 +41,8 @@
             "hidden": true
           }
         }
-      ]
+      ],
+      "react-native-compressor"
     ],
     "experiments": {
       "typedRoutes": true

@@ -90,7 +90,23 @@ function AuthenticatedLayout() {
           headerShown: true,
         }}
       />
-    </Stack>
+      <Stack.Screen
+        name="create_story"
+        options={{
+          title: "Create Story",
+          headerBackTitle: "Back",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="prediction-overview"
+        options={{
+          title: "Prediction Overview",
+          headerBackTitle: "Back",
+          headerShown: true,
+        }}
+      />
+    </Stack>   
   );
 }
 

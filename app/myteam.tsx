@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   Image,
   ImageBackground,
@@ -15,12 +16,24 @@ import {
 import { useAuth } from "../context/AuthContext";
 
 export default function MyTeam() {
-  const { user, logout, fetchWithAuth } = useAuth();
+  const { user, fetchWithAuth } = useAuth();
   const router = useRouter();
   const [expiringCount, setExpiringCount] = useState(0);
   const [team, setTeam] = useState<any>(null);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current; // ✅ Safe Animated.Value
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      Alert.alert("Logged out", "You have been logged out successfully.");
+    } catch (error) {
+      console.error("Logout error:", error);
+      Alert.alert("Error", "Something went wrong while logging out.");
+    }
+  };
+
 
   const fetchTeamData = async () => {
     if (!user) return;
@@ -32,8 +45,8 @@ export default function MyTeam() {
         ...data.team,
         main_players_count: data.main_players_count,
         academy_players_count: data.academy_players_count,
-        total_weekly_wage: data.total_weekly_wage,
-        total_yearly_wage: data.total_yearly_wage,
+        total_weekly_wage: data.total_weekly_wage, 
+        season_bonus: data.season_bonus,
       });
     } catch (err) {
       console.error("Failed to fetch team data:", err);
@@ -96,10 +109,16 @@ export default function MyTeam() {
                   <Text style={styles.valueText}>{team.forecast_end_balance.toFixed(2)}M</Text>
                 </Text>
                 <Text style={styles.detailText}>
-                  Weekly Wage: <Text style={styles.valueText}>{team.total_weekly_wage.toFixed(2)}M</Text>
+                  Weekly Wage: {" "}<Text style={styles.valueText}>{team.total_weekly_wage.toFixed(2)}M</Text>
                 </Text>
                 <Text style={styles.detailText}>
-                  Yearly Wage: <Text style={styles.valueText}>{team.total_yearly_wage.toFixed(2)}M</Text>
+                  Yearly Wage: {" "}<Text style={styles.valueText}>{team.yearly_wage_total.toFixed(2)}M</Text>
+                </Text>
+                <Text style={styles.detailText}>
+                  Current Wage Cost: <Text style={styles.valueText}>{team.wage_cost.toFixed(2)}M</Text>
+                </Text>
+                <Text style={styles.detailText}>
+                  Current Season Bonus: <Text style={styles.valueText}>{team.season_bonus.toFixed(2)}M</Text>
                 </Text>
                 <Text style={styles.detailText}>
                   Main Players: <Text style={styles.valueText}>{team.main_players_count}</Text>
@@ -124,6 +143,13 @@ export default function MyTeam() {
                 onPress={() => router.push("/create_news")}
               >
                 <Text style={styles.buttonText}>Make a Post</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={() => router.push("/create_story")}
+              >
+                <Text style={styles.buttonText}>Create Story</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.primaryButton} onPress={() => router.push("/squad")}>
@@ -156,7 +182,7 @@ export default function MyTeam() {
                 <Text style={styles.buttonText}>Settings</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+              <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
                 <Text style={styles.logoutText}>Logout</Text>
               </TouchableOpacity>
             </View>

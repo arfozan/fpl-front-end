@@ -13,32 +13,12 @@ interface Player {
   is_academy_player: boolean;
 }
 
-interface AchievementRank {
-  season: string;
-  rank: number;
-}
-
-interface Achievement {
-  league_champion: string | null;
-  league_runner_up: string | null;
-  ucl_champion: string | null;
-  ucl_runner_up: string | null;
-  ranks: AchievementRank[];
-}
-
 interface TeamDetail {
   team_name: string;
   logo: string;
   manager_name: string;
   manager_photo: string;
-  total_weekly_wage: number;
-  forecast_end_balance: number;
-  current_balance: number;
-  bonus_income: number;
-  total_players: number;
-  academy_players: number;
   players: Player[];
-  achievements: Achievement[];
 }
 
 export default function SquadTab({ team }: { team: TeamDetail }) {
@@ -155,30 +135,29 @@ export default function SquadTab({ team }: { team: TeamDetail }) {
   return (
     <FlatList
       ListHeaderComponent={
-        <ImageBackground
-          source={{ uri: team.logo }}
-          imageStyle={{ borderRadius: 20, opacity: 0.2 }}
-          style={{ padding: 12, marginBottom: 16, flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-            borderRadius: 20, backgroundColor: '#ffffffff', elevation: 3, borderColor: '#ddd', borderWidth: 1
-           }}
-        >
-          <View>
-            <Text style={styles.teamName}>{team.team_name}</Text>
-            <Text>Total Players: {team.total_players}</Text>
-            <Text>Academy: {team.academy_players}</Text>
-            <Text>Balance: {team.current_balance.toFixed(2)}</Text>
-            <Text>Forecast: {team.forecast_end_balance.toFixed(2)}</Text>
-            <Text>Forecast: {team.bonus_income}</Text>
+        <View style={{
+            borderRadius: 20, backgroundColor: '#0fa4d1ff', elevation: 3, borderColor: '#ddd', borderWidth: 1, marginBottom: 16
+          }}>
+          <Text style= {{fontSize: 18, fontWeight: "bold", alignSelf: "center", padding: 5}}>Manager</Text> 
+          <View style={{ backgroundColor: '#ffffffff', padding: 10, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, }}>   
+          <ImageBackground
+            source={{ uri: team.logo }}
+            imageStyle={{opacity: 0.2, resizeMode: "contain"}}          
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <Image
+              source={{ uri: team.manager_photo }}
+              style={{ width: 100, height: 100, borderRadius: 50, alignSelf: "flex-end", marginBottom: 16, borderColor: "#3ca9b8ff", borderWidth: 2 }}
+              resizeMode="contain"
+              />
+              <View style={{ flex:1, marginLeft:10, alignItems: "flex-end", maxWidth:"70%"}}>
+              <Text style={{ textAlign: "right", fontWeight: "600", fontSize: 17 }}>{team.manager_name}</Text>
+              <Text style={{ textAlign: "right" }}>Club: {team.team_name}</Text>
+              </View>
+            </View>
+          </ImageBackground>
           </View>
-          <View>
-            <Image
-            source={{ uri: team.manager_photo }}
-            style={{ width: 100, height: 100, borderRadius: 50, alignSelf: "center", marginBottom: 16, borderColor: "#3ca9b8ff", borderWidth: 2 }}
-            resizeMode="contain"
-            />
-            <Text style={{ textAlign: "center", fontWeight: "600" }}>{team.manager_name}</Text>
-          </View>
-        </ImageBackground>
+        </View>
       }
       data={[1]} // dummy data, actual rendering handled below
       keyExtractor={(item, index) => `${index}`}
@@ -189,24 +168,6 @@ export default function SquadTab({ team }: { team: TeamDetail }) {
         </>
       )}
       contentContainerStyle={{ padding: 12 }}
-      ListFooterComponent={
-        <View style={{ marginTop: 16, marginBottom:20, padding: 12, backgroundColor: "#f9f9f9", borderRadius: 10, alignItems: "center" }}>
-          <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 8 }}>Achievements</Text>
-          {team.achievements[0].ranks.length > 0 ? (
-            team.achievements[0].ranks.map((r, idx) => (
-              <Text key={idx} style={{ fontSize: 14 }}>
-                {r.season}: {r.rank}{r.rank === 1 ? "st" : r.rank === 2 ? "nd" : r.rank === 3 ? "rd" : "th"}
-              </Text>
-            ))
-          ) : (
-            <Text>No rank history available.</Text>
-          )}
-          <Text style={{ marginTop: 8 }}>League Champion: {team.achievements[0].league_champion || "—"}</Text>
-          <Text>League Runner Up: {team.achievements[0].league_runner_up || "—"}</Text>
-          <Text>UCL Champion: {team.achievements[0].ucl_champion || "—"}</Text>
-          <Text>UCL Runner Up: {team.achievements[0].ucl_runner_up || "—"}</Text>
-        </View>
-      }
     />
   );
 }

@@ -1,5 +1,8 @@
 import BidInput from "@/components/BidInput";
+import NextRoundPrediction from "@/components/NextRoundPrediction";
+import StoryBubble from "@/components/StoryBubble";
 import { BASE_URL } from "@/config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -8,12 +11,14 @@ import {
   Alert,
   Image,
   ImageBackground,
+  ScrollView,
   Text,
   TouchableOpacity,
   View
 } from "react-native";
 import RefreshableWrapper from "../../components/RefreshableWrapper";
 import { useAuth } from "../../context/AuthContext";
+
 
 type TeamInfo = {
   username: string;
@@ -41,6 +46,8 @@ type Bid = {
   id: number;
   player: number;
   player_name: string;
+  position: string;
+  club_name: string;
   player_photo?: string;
   team_name: string;
   amount: number;
@@ -116,6 +123,30 @@ export default function index() {
   const [bidAmount, setBidAmount] = useState<{ [key: number]: number }>({});
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
+  const [stories, setStories] = useState([]);
+  const [viewedStories, setViewedStories] = useState<number[]>([]);
+
+useEffect(() => {
+  (async () => {
+    try {
+      const stored = await AsyncStorage.getItem("viewedStories");
+      if (stored) setViewedStories(JSON.parse(stored));
+    } catch (err) {
+      console.error("Failed to load viewed stories:", err);
+    }
+  })();
+}, []);
+
+  const loadStories = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/stories-feed/`);
+      if (res.ok) {
+        setStories(await res.json());
+      }
+    } catch (err) {
+      console.log("Failed to load stories:", err);
+    }
+  };
 
   const loadTeamInfo = async () => {
     if (!user) return setTeamInfo(null);
@@ -161,7 +192,7 @@ export default function index() {
   const loadData = async () => {
     setLoading(true);
     try {
-      await Promise.all([loadTeamInfo(), loadSeasonInfo(), loadBids(), loadNews()]);
+      await Promise.all([loadTeamInfo(), loadSeasonInfo(), loadBids(), loadNews(), loadStories()]);
     } catch (err) {
       console.error("Error loading data:", err);
     } finally {
@@ -203,7 +234,11 @@ export default function index() {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m left`;
   };
-
+  const markStoriesAsViewed = async (storyIds: number[]) => {
+  const updated = [...new Set([...viewedStories, ...storyIds])];
+  setViewedStories(updated);
+  await AsyncStorage.setItem("viewedStories", JSON.stringify(updated));
+};
   const renderDeadline = () => {
     if (daysLeft === null) return null;
     return (
@@ -274,8 +309,38 @@ export default function index() {
           )}
           </View>
         </LinearGradient>
+{/* ✅ Stories Section */}
+{stories.length > 0 && (
+        <View style={{ paddingVertical: 10 }}>
+          <Text style={{ marginLeft: 15, marginBottom: 8, fontSize: 16, fontWeight: "700" }}>
+            Stories
+          </Text>
 
-        🪩 Transfer Window Banner
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingLeft: 10 }}>
+            {stories.map((entry) => {
+              const isViewed = entry.stories.every((s: any) => viewedStories.includes(s.id));
+
+              return (
+                <StoryBubble
+                  key={entry.user.id}
+                  entry={entry}
+                  router={router}
+                  isViewed={isViewed}
+                  onPress={() => {
+                    router.push({
+                      pathname: "/story-viewer",
+                      params: { userId: entry.user.id },
+                    });
+                    const storyIds = entry.stories.map((s: any) => s.id);
+                    markStoriesAsViewed(storyIds);
+                  }}
+                />
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+        {/* 🪩 Transfer Window Banner */}
         {seasonInfo?.transfer_window && (
           <ImageBackground
             source={require("../../assets/images/tw_banner.png")}
@@ -349,7 +414,7 @@ export default function index() {
                     marginBottom: 12,
                     overflow: "hidden",
                   }}
-                  imageStyle={{ borderRadius: 14 }}
+                  imageStyle={{ borderRadius: 14, opacity:0.6}}
                 >
                   <View style={{ flexDirection: "row" }}>
                     <Image
@@ -425,6 +490,10 @@ export default function index() {
             })}
           </View>
         )}
+        {/* ✅ Prediction Mini-Game */}
+        <View style={{ marginBottom: 20 }}>
+          <View><NextRoundPrediction/></View>
+        </View>
 
         {/* 📰 News Feed */}
         <View style={{ marginHorizontal: 10 }}>
@@ -437,7 +506,7 @@ export default function index() {
               marginBottom: 10,
             }}
           >
-            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
+            <Text style={{ color: "#fff", fontSize: 18, fontWeight: "600" }}>
               News
             </Text>
           </LinearGradient>

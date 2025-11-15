@@ -2,12 +2,12 @@ import { Picker } from "@react-native-picker/picker";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { BASE_URL } from "../../../config";
 
@@ -29,6 +29,7 @@ interface BonusPlayer {
   last_name: string;
   position: string;
   team_name: string;
+  logo: Image;
 }
 
 interface WeeklyDetail {
@@ -169,6 +170,7 @@ export default function BonusScreen() {
             selectedValue={selectedSeason}
             style={styles.picker}
             onValueChange={(value) => setSelectedSeason(value)}
+            dropdownIconColor='#fff'
           >
             {seasons.map((season) => (
               <Picker.Item key={season.id} label={season.name} value={season.id} />
@@ -183,6 +185,7 @@ export default function BonusScreen() {
           selectedValue={selectedTeam}
           style={styles.picker}
           onValueChange={(value) => setSelectedTeam(value)}
+          dropdownIconColor='#fff'
         >
           <Picker.Item label="All Teams" value={null} />
           {teams.map((team) => (
@@ -200,17 +203,9 @@ export default function BonusScreen() {
           <Text style={styles.subHeader}>Total Bonus</Text>
         </View>
           {Object.entries(bonusData.total_bonus).map(([teamId, data]: [string, any]) => (
-            <View key={teamId} style={{ flex: 1, alignContent: "space-evenly", backgroundColor: "#0066ccff", padding: 8, borderRadius: 5, marginVertical: 2 }}>
-                <View style={{ flexDirection: "row" }}>              
-                {data.logo && (
-                <Image style={{ width: 30, height: 30 }}
-                    source={{ uri: `${BASE_URL}/api${data.logo}` }}
-                />
-                )}
-                <Text style={{fontSize: 18, fontWeight: "600", color: "white", marginLeft: 5}}>
-                {data.team_name}: {Number(data.bonus ?? 0).toFixed(1)}M
-                </Text>
-                </View>
+            <View key={teamId} style={{flex:1, justifyContent:"space-between", flexDirection:"row", alignContent:"space-between", backgroundColor: "#0066ccff", padding: 8, borderRadius: 5, marginVertical: 2 }}>
+              <Text style={{fontSize: 14, fontWeight: "600", color: "white"}}>{data.team_name}: </Text>
+              <Text style={{fontSize: 14, fontWeight: "600", color: "white"}}>{Number(data.bonus ?? 0).toFixed(1)}M</Text>
             </View>
             ))}
         <View style={{ alignItems: "center", backgroundColor: "#0047a3ff", padding: 10, borderRadius: 10, marginVertical: 10, marginTop:20 , marginBottom:2.5}}>
@@ -225,7 +220,7 @@ export default function BonusScreen() {
               {renderPlayerList("Best Defenders", week.highest_df_players)}
               {renderPlayerList("Best Midfielders", week.highest_mf_players)}
               {renderPlayerList("Best Forwards", week.highest_fw_players)}
-              {renderPlayerList("Special Bonus", week.special_bonus_players)}
+              {renderPlayerList("Team of the Week Bonus", week.special_bonus_players)}
             </View>
           ))}
         </View>
@@ -258,7 +253,6 @@ const styles = StyleSheet.create({
   pickerContainer: {
     backgroundColor: "#00367cff",
     borderRadius: 10,
-    padding: 5,
     marginVertical: 5,
     marginHorizontal: 10,
     flex: 1,

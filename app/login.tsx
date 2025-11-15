@@ -5,9 +5,10 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
+
 
 export default function Login() {
   const { login } = useAuth();
@@ -30,17 +31,10 @@ export default function Login() {
   };
 
   return (
-    <View style={{ padding: 20, backgroundColor: "#ccccccff", flex: 1 }}>
       <ImageBackground
-        source={require("../assets/images/pl_card.png")}
+        source={require("../assets/images/bg-card.jpg")}
         resizeMode="cover"
-        style={{
-          borderRadius: 10,
-          overflow: "hidden",
-          justifyContent: "center",
-          alignItems: "center",
-          marginBottom: 30,
-        }}
+        style={{flex:1, width: "100%", height: "100%"}}
       >
         <View
           style={{
@@ -48,29 +42,13 @@ export default function Login() {
             height: 200,
             borderRadius: 10,
             alignContent: "center",
-            justifyContent: "flex-start",
-            flexDirection: "row",
           }}
         >
-          <View style={{ flex: 0.5 }}>
-            <Text
-              style={{ fontSize: 24, fontWeight: "bold", marginLeft: 10, marginTop: 20 }}
-            >
-              Play
-            </Text>
-            <Text style={{ fontSize: 24, fontWeight: "bold", marginLeft: 10 }}>
-              Biggest
-            </Text>
-            <Text style={{ fontSize: 24, fontWeight: "bold", marginLeft: 10 }}>
-              Fantasy
-            </Text>
-          </View>
           <View
             style={{
               flex: 1,
-              alignContent: "flex-end",
               justifyContent: "center",
-              alignItems: "flex-end",
+              alignItems: "center",
             }}
           >
             <Text
@@ -79,28 +57,27 @@ export default function Login() {
                 fontWeight: "bold",
                 alignItems: "center",
                 marginTop: 60,
-                marginRight: 20,
+                color:"#ffff"
               }}
             >
-              Log In
+              To Manage Youn Team
             </Text>
             <Text
               style={{
                 fontSize: 24,
                 fontWeight: "bold",
                 alignItems: "center",
-                marginRight: 20,
+                color:"#ffff"
               }}
             >
-              Now!
+              Log In Now!
             </Text>
           </View>
         </View>
-      </ImageBackground>
-
-      <View style={{ backgroundColor: "white", padding: 20, borderRadius: 10 }}>
+      <View style={{ backgroundColor: "white", padding: 20, borderRadius: 10, marginHorizontal: 10}}>
         <TextInput
           placeholder="Username"
+          placeholderTextColor="#808080ff"
           value={username}
           onChangeText={setUsername}
           style={{
@@ -112,6 +89,7 @@ export default function Login() {
         />
         <TextInput
           placeholder="Password"
+          placeholderTextColor="#808080ff"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -120,6 +98,7 @@ export default function Login() {
             borderRadius: 10,
             marginVertical: 8,
             padding: 8,
+            color:"#000000ff"
           }}
         />
 
@@ -150,6 +129,6 @@ export default function Login() {
           )}
         </TouchableOpacity>
       </View>
-    </View>
+    </ImageBackground>
   );
 }

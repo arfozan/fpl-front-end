@@ -112,6 +112,8 @@ const LeagueTableScreen = () => {
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={selectedSeasonId}
+          prompt='Select Season'
+          dropdownIconColor='#000000ff'
           onValueChange={(value) => {
             const season = seasons.find((s) => s.id === value);
             if (season) {
@@ -168,7 +170,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     overflow: 'hidden',
   },
-  picker: { height: 50, width: '100%' },
+  picker: { height: 50, width: '100%', color: '#000000ff'},
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: '#007AFF',
