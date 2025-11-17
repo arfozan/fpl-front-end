@@ -105,7 +105,7 @@ useEffect(() => {
     );
   }
   return (
-    <RefreshableWrapper onRefresh={{loadPlayers}}>
+    <RefreshableWrapper onRefresh={loadPlayers}>
       <LinearGradient
         colors={['#d6bb42ff', '#9e1818ff']} // startColor, endColor
         start={{ x: 0, y: 0 }}
@@ -154,9 +154,9 @@ useEffect(() => {
                     />
                   )}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontWeight: "bold" }}>{item.full_name}</Text>
-                    <Text>
-                      Expire : {item.contract_expiry}{item.weekly_wage ? ` || Wage: ${item.weekly_wage}` : ""}
+                    <Text style={{ fontWeight: "bold", fontSize:16 }}>{item.full_name}</Text>
+                    <Text style={{justifyContent:"space-around"}}>
+                      Expire : {item.contract_expiry}{item.weekly_wage ? ` | Wage: ${item.weekly_wage}` : ""}
                     </Text>
                     {item.is_loan && item.loan_from_team_name && (
                       <Text style={{ color: "#666" }}>Loaned from {item.loan_from_team_name}</Text>
@@ -205,8 +205,8 @@ useEffect(() => {
                   )}
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontWeight: "bold" }}>{item.full_name}</Text>
-                    <Text>
-                      {item.position} {item.weekly_wage ? `• Wage: ${item.weekly_wage}` : ""}
+                    <Text style={{justifyContent:"space-between"}}>
+                      {item.contract_expiry} {item.weekly_wage ? `| Wage: ${item.weekly_wage}` : ""}
                     </Text>
                   </View>
                 </TouchableOpacity>

@@ -1,3 +1,4 @@
+import RefreshableWrapper from "@/components/RefreshableWrapper";
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -19,16 +20,24 @@ interface Team {
   forecast_end_balance: number;
 }
 
-const cardWidth = Dimensions.get("window").width / 2 - 24;
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const cardWidth = (SCREEN_WIDTH - 10 * 2 - 10) / 2; 
 
 export default function TeamsScreen() {
   const [teams, setTeams] = useState<Team[]>([]);
 
+  const refreshTeams = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/team-summary/`);
+      const data = await res.json();
+      setTeams(data);
+    } catch (err) {
+      console.error("Error refreshing teams:", err);
+    }
+  };
+
   useEffect(() => {
-    fetch(`${BASE_URL}/api/team-summary/`)
-      .then((res) => res.json())
-      .then((data) => setTeams(data))
-      .catch((err) => console.error("Error fetching teams:", err));
+    refreshTeams();    // ← load automatically on first render
   }, []);
 
   const renderTeam = ({ item }: { item: Team }) => (
@@ -52,13 +61,16 @@ export default function TeamsScreen() {
   );
 
   return (
-    <FlatList
-      data={teams}
-      keyExtractor={(item) => item.id.toString()}
-      renderItem={renderTeam}
-      numColumns={2}
-      contentContainerStyle={{ padding: 10 }}
-    />
+    <RefreshableWrapper onRefresh={refreshTeams}>
+      <FlatList
+        data={teams}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderTeam}
+        numColumns={2}
+        contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 10 }}
+        columnWrapperStyle={{ justifyContent: "center" }}
+      />
+    </RefreshableWrapper>
   );
 }
 

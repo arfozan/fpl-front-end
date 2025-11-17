@@ -32,7 +32,7 @@ export default function StoryBubble({ entry, isViewed, onPress }: StoryBubblePro
       Animated.loop(
         Animated.sequence([
           Animated.timing(scaleAnim, {
-            toValue: 1.08,
+            toValue: 1.04,
             duration: 600,
             easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
@@ -65,7 +65,7 @@ export default function StoryBubble({ entry, isViewed, onPress }: StoryBubblePro
       ? `${BASE_URL}${entry.user.logo}`
       : null;
 
-  const RING_SIZE = 72;
+  const RING_SIZE = 85;
 
   return (
     <TouchableOpacity onPress={onPress} style={{ alignItems: "center", marginRight: 15, paddingTop: 5 }}>

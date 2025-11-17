@@ -58,6 +58,8 @@ export default function TransferRequestsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [newGWInput, setNewGWInput] = useState("");
+  const [amountInput, setAmountInput] = useState("");
+
 
   const myTeamName = user?.name?.trim().toLowerCase() || "";
 
@@ -106,11 +108,11 @@ export default function TransferRequestsScreen() {
     if (res.ok) { Alert.alert("Done"); if (teamId) fetchRequests(teamId); }
   };
 
-  const handleRequestExtension = async (transferId: number, newGW: number) => {
+  const handleRequestExtension = async (transferId: number, newGW: number, newAmount: number) => {
     const res = await fetchWithAuth(`${BASE_URL}/api/loan-extension-requests/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ transfer: transferId, new_loan_gameweek: newGW }),
+      body: JSON.stringify({ transfer: transferId, new_loan_gameweek: newGW, amount: newAmount }),
     });
     if (res.ok) { Alert.alert("Extension Requested"); fetchLoanData(); } 
     else { Alert.alert("Error", (await res.json()).detail || ""); }
@@ -196,22 +198,47 @@ export default function TransferRequestsScreen() {
               >
                 <View style={styles.modalOverlay}>
                   <View style={styles.modalContent}>
-                    <Text>Enter new gameweek (must be &gt; current)</Text>
+                    <Text style={{ fontWeight: "bold" }}>New Loan Gameweek</Text>
                     <TextInput
                       keyboardType="numeric"
                       value={newGWInput}
                       onChangeText={setNewGWInput}
                       style={styles.input}
                     />
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
-                      <TouchableOpacity onPress={() => setModalVisible(false)} style={[styles.button, { backgroundColor: "#aaa" }]}>
+
+                    <Text style={{ fontWeight: "bold", marginTop: 10 }}>Amount</Text>
+                    <TextInput
+                      keyboardType="numeric"
+                      value={amountInput}
+                      onChangeText={setAmountInput}
+                      style={styles.input}
+                    />
+
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        marginTop: 20,
+                      }}
+                    >
+                      <TouchableOpacity
+                        onPress={() => setModalVisible(false)}
+                        style={[styles.button, { backgroundColor: "#aaa" }]}
+                      >
                         <Text style={styles.buttonText}>Cancel</Text>
                       </TouchableOpacity>
+
                       <TouchableOpacity
                         onPress={() => {
                           if (selectedPlayerId) {
-                            handleRequestExtension(selectedPlayerId, parseInt(newGWInput));
-                            setModalVisible(false); setNewGWInput("");
+                            handleRequestExtension(
+                              selectedPlayerId,
+                              Number(newGWInput),
+                              Number(amountInput) || 0
+                            );
+                            setModalVisible(false);
+                            setNewGWInput("");
+                            setAmountInput("");
                           }
                         }}
                         style={styles.button}
@@ -234,6 +261,7 @@ export default function TransferRequestsScreen() {
               <Text style={styles.playerName}>{item.player_name} ({item.to_team_name})</Text>
               <Text>Current GW: {item.current_gameweek}</Text>
               <Text>Requested until GW: {item.new_loan_gameweek}</Text>
+              <Text>Amount: {item.amount}</Text>
               <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
                 <TouchableOpacity style={styles.approveButton} onPress={() => handleApproveExtension(item.id)}>
                   <Text style={styles.buttonText}>Approve</Text>

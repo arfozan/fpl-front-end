@@ -27,6 +27,14 @@ export default function TeamDetailScreen() {
 
   const navigation = useNavigation();
 
+  useLayoutEffect(() => {
+    if (team) {
+      navigation.setOptions({
+        title: team.team_name,
+      });
+    }
+  }, [team, navigation]);
+
   useEffect(() => {
     Promise.all([
       fetch(`${BASE_URL}/api/team/${id}/`).then((res) => res.json()),
@@ -38,15 +46,6 @@ export default function TeamDetailScreen() {
       })
       .finally(() => setLoading(false));
   }, [id]);
-
-  // Set the header title dynamically
-  useLayoutEffect(() => {
-    if (team) {
-      navigation.setOptions({
-        title: team.name, // now will replace [id] in header
-      });
-    }
-  }, [team, navigation]);
 
   if (loading) {
     return (

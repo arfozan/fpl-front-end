@@ -86,6 +86,7 @@ export default function PlayerDetail() {
           onChangeText={setAmount}
           keyboardType="numeric"
           style={styles.input}
+          placeholderTextColor={"#797979ff"}
         />
 
         <View style={styles.row}>
@@ -99,6 +100,7 @@ export default function PlayerDetail() {
               selectedValue={loanGameweek}
               onValueChange={(value) => setLoanGameweek(value.toString())}
               style={styles.picker}
+              dropdownIconColor={"#000000ff"}
             >
               {Array.from({ length: 38 - 7 + 1 }, (_, i) => i + 7).map((gw) => (
                 <Picker.Item key={gw} label={`Gameweek ${gw}`} value={gw} />
@@ -111,7 +113,8 @@ export default function PlayerDetail() {
           placeholder="Message / other clauses"
           value={message}
           onChangeText={setMessage}
-          style={[styles.input, { height: 100 }]}
+          style={[styles.input, { height: 100}]}
+          placeholderTextColor={"#797979ff"}
           multiline
         />
 
@@ -155,7 +158,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: "#f9f9f9",
   },
-  picker: { height: 50, width: "100%" },
+  picker: { height: 50, width: "100%", color: "#000000ff"},
   sendButton: {
     backgroundColor: "#2a9d8f",
     paddingVertical: 14,

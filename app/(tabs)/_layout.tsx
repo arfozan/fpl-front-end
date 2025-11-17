@@ -60,14 +60,12 @@ export default function TabLayout() {
         name="season"
         options={{
           title: "Seasons",
-          tabBarBadge: contractAlerts > 0 ? contractAlerts : undefined,
           headerRight,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="earth-outline" color={color} size={size} />
           ),
         }}
       />
-
       <Tabs.Screen
         name="profile"
         options={{

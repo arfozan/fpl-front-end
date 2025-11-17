@@ -168,7 +168,7 @@ export default function PredictionSection() {
           )
         )}
 
-        {/* ✅ NEXT ROUND */}
+        {/* NEXT ROUND — MAKE PREDICTIONS */}
         {next && !next.already_submitted && next.matches && (
           <View style={styles.section}>
             <Text style={styles.subtitle}>
@@ -185,10 +185,7 @@ export default function PredictionSection() {
                   {["HOME", "DRAW", "AWAY"].map((c) => (
                     <TouchableOpacity
                       key={c}
-                      style={[
-                        styles.btn,
-                        selected[m.id] === c && styles.activeBtn,
-                      ]}
+                      style={[styles.btn, selected[m.id] === c && styles.activeBtn]}
                       onPress={() => choose(m.id, c)}
                     >
                       <Text>{c}</Text>
@@ -201,15 +198,10 @@ export default function PredictionSection() {
             <TouchableOpacity style={styles.submit} onPress={submit}>
               <Text style={styles.submitText}>Submit Prediction</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.submit}
-              onPress={() => router.push("/prediction-overview")}
-            >
-              <Text style={styles.submitText}>View Full Prediction Overview</Text>
-            </TouchableOpacity>
           </View>
         )}
-        {/* ✅ NEXT ROUND — ALREADY SUBMITTED */}
+
+        {/* NEXT ROUND — ALREADY SUBMITTED */}
         {next && next.already_submitted && (
           <View style={styles.section}>
             <Text style={styles.subtitle}>
@@ -224,6 +216,12 @@ export default function PredictionSection() {
             ))}
           </View>
         )}
+        <TouchableOpacity
+            style={styles.submit}
+            onPress={() => router.push("/prediction-overview")}
+          >
+            <Text style={styles.submitText}>View All Predictions</Text>
+          </TouchableOpacity>
       </View>
     </View>
   );

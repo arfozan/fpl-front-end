@@ -105,7 +105,7 @@ export default function StoryViewer() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" translucent backgroundColor="transparent" />
+      <StatusBar style="light" translucent backgroundColor="transparent"/>
       {/* Progress bars */}
       <View style={styles.progressContainer}>
         {stories.map((_, i) => (

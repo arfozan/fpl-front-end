@@ -174,7 +174,7 @@ export default function PlayerDetailScreen() {
               }
               const data = await res.json();
               setPlayer((prev) =>
-                prev ? { ...prev, contract_expiry: data.contract_expiry } : prev
+                prev ? { ...prev, contract_expiry: data.contract_expiry, contract_renew_bonus: data.contract_renew_bonus } : prev
               );
               alert("Contract extended successfully!");
             } catch (err) {

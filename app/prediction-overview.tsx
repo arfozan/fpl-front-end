@@ -2,8 +2,14 @@ import { BASE_URL } from "@/config";
 import { useAuth } from "@/context/AuthContext";
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function PredictionOverview() {
   const { user, fetchWithAuth } = useAuth();
@@ -11,13 +17,16 @@ export default function PredictionOverview() {
 
   const [loading, setLoading] = useState(true);
   const [seasons, setSeasons] = useState<any[]>([]);
-  const [rounds, setRounds] = useState<number[]>([]);
+  const [rounds, setRounds] = useState<any[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string>("");
-  const [selectedRound, setSelectedRound] = useState<number | null>(null);
+  const [selectedRound, setSelectedRound] = useState<string | number>("all");
 
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [predictions, setPredictions] = useState<any[]>([]);
 
+  // ----------------------------------------
+  // LOAD SEASONS
+  // ----------------------------------------
   useEffect(() => {
     if (!user) return;
     loadSeasons();
@@ -29,29 +38,39 @@ export default function PredictionOverview() {
       const json = await res.json();
 
       setSeasons(json);
-      setSelectedSeason(json.find((s: any) => s.is_season_active)?.season_name);
+      setSelectedSeason(
+        json.find((s: any) => s.is_season_active)?.season_name || ""
+      );
     } catch (e) {
       console.log("Failed to load seasons", e);
     }
   };
 
+  // ----------------------------------------
+  // LOAD ROUNDS
+  // ----------------------------------------
   useEffect(() => {
     if (selectedSeason) loadRounds();
   }, [selectedSeason]);
 
   const loadRounds = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/rounds/?season=${selectedSeason}`);
+      const res = await fetch(
+        `${BASE_URL}/api/rounds/?season=${selectedSeason}`
+      );
       const json = await res.json();
 
       const nums = json.map((r: any) => r.round_number);
-      setRounds(nums);
-      setSelectedRound(nums[0] || null);
+      setRounds(["all", ...nums]); // "all" first
+      setSelectedRound("all");
     } catch (e) {
-      console.log("Failed loading rounds");
+      console.log("Failed loading rounds", e);
     }
   };
 
+  // ----------------------------------------
+  // LOAD PREDICTIONS
+  // ----------------------------------------
   useEffect(() => {
     if (selectedSeason && selectedRound != null) loadOverview();
   }, [selectedSeason, selectedRound]);
@@ -60,9 +79,13 @@ export default function PredictionOverview() {
     try {
       setLoading(true);
 
+      const roundParam =
+        selectedRound === "all" ? "" : `&round=${selectedRound}`;
+
       const res = await fetchWithAuth(
-        `${BASE_URL}/api/prediction/overview/?season=${selectedSeason}&round=${selectedRound}`
+        `${BASE_URL}/api/prediction/overview/?season=${selectedSeason}${roundParam}`
       );
+
       const json = await res.json();
 
       setLeaderboard(json.leaderboard || []);
@@ -73,6 +96,27 @@ export default function PredictionOverview() {
     setLoading(false);
   };
 
+  // ----------------------------------------
+  // GROUP PREDICTIONS BY ROUND (for "all")
+  // ----------------------------------------
+  const groupedPredictions = useMemo(() => {
+    if (selectedRound !== "all") {
+      return { [selectedRound]: predictions };
+    }
+
+    const grouped: Record<string, any[]> = {};
+
+    predictions.forEach((p) => {
+      if (!grouped[p.round_number]) grouped[p.round_number] = [];
+      grouped[p.round_number].push(p);
+    });
+
+    return grouped;
+  }, [predictions, selectedRound]);
+
+  // ----------------------------------------
+  // RENDERING
+  // ----------------------------------------
   if (!user) {
     return (
       <View style={styles.center}>
@@ -92,143 +136,231 @@ export default function PredictionOverview() {
   }
 
   return (
-    <ScrollView style={styles.screen}>
+    <ScrollView style={styles.screen}
+      contentContainerStyle={{ paddingBottom: 60 }}
+    >
       <Text style={styles.header}>Prediction Overview</Text>
+      {/* ------------------ PICKERS ------------------ */}
+      <View style={styles.filtersRow}>
+        <View style={styles.filterBox}>
+          <Picker
+            selectedValue={selectedSeason}
+            onValueChange={(v) => setSelectedSeason(v)}
+            style={styles.picker}
+            itemStyle={styles.pickerItem}
+            dropdownIconColor="#000"
+          >
+            {seasons.map((s: any) => (
+              <Picker.Item key={s.id} label={s.season_name} value={s.season_name} color="#000" />
+            ))}
+          </Picker>
+        </View>
 
-      {/* ✅ Season Picker */}
-      <View style={styles.pickerBox}>
-        <Text style={styles.pickerLabel}>Season</Text>
-        <Picker
-          selectedValue={selectedSeason}
-          onValueChange={(v) => setSelectedSeason(v)}
-        >
-          {seasons.map((s: any) => (
-            <Picker.Item key={s.id} label={s.season_name} value={s.season_name} />
-          ))}
-        </Picker>
+        <View style={styles.filterBox}>
+          <Picker
+            selectedValue={selectedRound}
+            onValueChange={(v) => setSelectedRound(v)}
+            style={styles.picker}
+            itemStyle={styles.pickerItem}
+            dropdownIconColor="#000"
+          >
+            <Picker.Item label="All Gameweeks" value="all" color="#000" />
+            {rounds
+              .filter((r) => r !== "all")
+              .map((r) => (
+                <Picker.Item key={r} label={`Gameweek ${r}`} value={r} color="#000" />
+              ))}
+          </Picker>
+        </View>
       </View>
 
-      {/* ✅ Round Picker */}
-      <View style={styles.pickerBox}>
-        <Text style={styles.pickerLabel}>Gameweek</Text>
-        <Picker
-          selectedValue={selectedRound}
-          onValueChange={(v) => setSelectedRound(v)}
-        >
-          {rounds.map((r) => (
-            <Picker.Item key={r} label={`GW${r}`} value={r} />
-          ))}
-        </Picker>
-      </View>
-
-      {/* -----------------------------------------------------
-         ✅ LEADERBOARD
-         ----------------------------------------------------- */}
+      {/* ------------------ LEADERBOARD ------------------ */}
       <Text style={styles.sectionTitle}>Leaderboard</Text>
 
       {leaderboard.map((row: any, index: number) => (
         <View key={index} style={styles.leaderCard}>
-          <Text style={styles.rank}>{index + 1}</Text>
+          <View style={styles.rankCircle}>
+            <Text style={styles.rankText}>{index + 1}</Text>
+          </View>
+
           <View style={{ flex: 1 }}>
-            <Text style={styles.teamName}>{row.manager_name}</Text>
+            <Text style={styles.managerName}>{row.manager_name}</Text>
             <Text style={styles.statText}>
-              Correct: {row.correct_predictions} | Wrong: {row.wrong_predictions}
+              {row.correct_predictions} correct • {row.wrong_predictions} wrong
             </Text>
           </View>
-          <Text style={styles.accuracy}>{row.accuracy_percent}%</Text>
+
+          <Text style={styles.accuracy}>
+            {row.accuracy_percent}%
+          </Text>
         </View>
       ))}
 
-      {/* -----------------------------------------------------
-         ✅ ALL PREDICTIONS
-         ----------------------------------------------------- */}
-      <Text style={styles.sectionTitle}>All Predictions (GW{selectedRound})</Text>
+      {/* ------------------ PREDICTIONS ------------------ */}
+      <Text style={styles.sectionTitle}>Predictions</Text>
 
-      {predictions.map((p, i) => (
-        <View key={i} style={styles.predCard}>
-          <Text style={styles.predMatch}>
-            {p.manager_name}'s Prediction
-          </Text>
-          <Text style={styles.matchText}>
-            {p.home} vs {p.away}
-          </Text>
+      {Object.entries(groupedPredictions).map(([round, items]) => (
+        <View key={round} style={styles.roundCard}>
+          <Text style={styles.roundTitle}>Gameweek {round}</Text>
 
-          <Text style={styles.choiceText}>Pick: {p.choice}</Text>
+          {items.map((p, i) => (
+            <View key={i} style={styles.predCard}>
+              <Text style={styles.predHeader}>{p.manager_name}</Text>
+              <Text style={styles.matchText}>
+                {p.home} vs {p.away}
+              </Text>
 
-          <View style={styles.resultRow}>
-            {p.is_correct === true && <Text style={styles.tick}>✔ Correct</Text>}
-            {p.is_correct === false && <Text style={styles.cross}>✖ Wrong</Text>}
-            {p.is_correct === null && (
-              <Text style={{ fontWeight: "600" }}>In progress</Text>
-            )}
-          </View>
+              <Text style={styles.choice}>Pick: {p.choice}</Text>
+
+              <View style={styles.resultRow}>
+                {p.is_correct === true && (
+                  <Text style={styles.correct}>✔ Correct</Text>
+                )}
+                {p.is_correct === false && (
+                  <Text style={styles.wrong}>✖ Wrong</Text>
+                )}
+                {p.is_correct === null && (
+                  <Text style={styles.pending}>In progress</Text>
+                )}
+              </View>
+            </View>
+          ))}
         </View>
       ))}
     </ScrollView>
   );
 }
 
+// ----------------------------------------------------------
+// STYLES
+// ----------------------------------------------------------
 const styles = StyleSheet.create({
-  screen: { padding: 14, backgroundColor: "#f5f5f5" },
+  screen: { padding: 14, backgroundColor: "#eef2f3" },
+
   header: {
-    fontSize: 24,
-    fontWeight: "800",
+    fontSize: 26,
+    fontWeight: "900",
     textAlign: "center",
-    marginVertical: 12,
-    color: "#0a3d62",
+    marginBottom: 14,
+    color: "#012a4a",
+  },
+
+  filtersRow: {
+  flexDirection: "row",
+  gap: 10,
+  marginBottom: 12,
+},
+
+filterBox: {
+  flex: 1,
+  backgroundColor: "#fff",
+  borderRadius: 8,
+  borderWidth: 1,
+  borderColor: "#c9c9c9",
+  height: 48,             
+  justifyContent: "center",
+},
+
+picker: {
+  height: 100,             // <<< MUST match container height
+  color: "#000",
+  paddingHorizontal: 4,   // <<< pushes text away from edge
+},
+
+pickerItem: {
+  fontSize: 15,           
+  height: 48,            
+},
+
+  row: {
+    flexDirection: "row",
+    gap: 12,
   },
 
   pickerBox: {
+    flex: 1,
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 8,
-    marginBottom: 10,
+    borderRadius: 12,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: "#c8c8c8",
   },
-  pickerLabel: { fontWeight: "700", marginBottom: 6 },
 
   sectionTitle: {
-    marginTop: 16,
-    fontSize: 18,
+    marginTop: 22,
+    fontSize: 20,
     fontWeight: "800",
-    color: "#192a56",
+    color: "#1a535c",
   },
 
+  // Leaderboard
   leaderCard: {
     flexDirection: "row",
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 14,
+    padding: 14,
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 10,
     elevation: 2,
   },
-  rank: {
-    fontSize: 22,
-    fontWeight: "900",
-    marginRight: 12,
-    width: 32,
-    textAlign: "center",
-    color: "#e84118",
+  rankCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#ff6b6b",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
   },
-  teamName: { fontSize: 16, fontWeight: "700" },
-  statText: { fontSize: 13, color: "#555" },
-  accuracy: { fontSize: 18, fontWeight: "800", color: "#009432" },
+  rankText: { color: "#fff", fontWeight: "900", fontSize: 16 },
+  managerName: { fontSize: 16, fontWeight: "700" },
+  statText: { fontSize: 13, color: "#777" },
+  accuracy: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#2ba84a",
+  },
 
+  // Round Card
+  roundCard: {
+    backgroundColor: "#ffffff",
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 14,
+    borderLeftWidth: 5,
+    borderLeftColor: "#3d5af1",
+    elevation: 1,
+  },
+  roundTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#3d5af1",
+    marginBottom: 8,
+  },
   predCard: {
-    backgroundColor: "#dff9fb",
-    borderLeftWidth: 4,
-    borderLeftColor: "#22a6b3",
+    backgroundColor: "#f1f9ff",
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#d1e7ff",
     marginTop: 10,
   },
-  predMatch: { fontSize: 15, fontWeight: "700", marginBottom: 4 },
-  matchText: { fontSize: 14, marginBottom: 4 },
-  choiceText: { fontWeight: "600", marginBottom: 4 },
+  predHeader: { fontWeight: "700", fontSize: 15, marginBottom: 4 },
+  matchText: { fontSize: 14, marginBottom: 4, color: "#34495e" },
+  choice: { fontWeight: "700", color: "#0d6efd", marginBottom: 4 },
 
   resultRow: { flexDirection: "row", alignItems: "center" },
-  tick: { color: "#009432", fontWeight: "800", marginLeft: 4 },
-  cross: { color: "#e84118", fontWeight: "800", marginLeft: 4 },
+  correct: { color: "#2ba84a", fontWeight: "800" },
+  wrong: { color: "#ff4757", fontWeight: "800" },
+  pending: { color: "#555", fontWeight: "600" },
 
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  pickerLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#555",
+    marginLeft: 4,
+    marginBottom: -4, // Pull label closer
+  },
 });

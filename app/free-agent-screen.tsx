@@ -133,6 +133,7 @@ export default function FreeAgents() {
         placeholder="Search players..."
         value={search}
         onChangeText={setSearch}
+        placeholderTextColor={"#808080ff"}
       />
 
       {/* Position Filter Buttons */}

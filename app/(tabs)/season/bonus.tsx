@@ -45,11 +45,23 @@ interface WeeklyDetail {
   special_bonus_players: BonusPlayer[];
 }
 
+interface MonthlyBonus {
+  id: number;
+  season: string;
+  month: string;
+  team: string;
+  player: string;
+  photo: string;
+  bonus_amount: number;
+  category: string;
+}
+
 interface BonusData {
   season_id: number;
   team_id: number | null;
   total_bonus: Record<string, number>;
   weekly_details: WeeklyDetail[];
+  monthly_bonus: MonthlyBonus[];
 }
 
 export default function BonusScreen() {
@@ -123,12 +135,7 @@ export default function BonusScreen() {
         <Text style={styles.sectionTitle}>{title}</Text>
         {teams.map(team => (
             <View style={{ flex:1 ,flexDirection: "row", alignContent: "center" }} key={team.id}>
-            <Image style={{ width: 20, height: 20 }}
-                source={{ uri: `${BASE_URL}/api${team.logo}` }}
-            />
-            <Text style={{fontWeight: "bold", color: "white"}}>{team.name}</Text>
-            <Text style={styles.playerText}>{team.manager_name}</Text>
-            
+            <Text style={{fontWeight: "bold", color: "white"}}>  • {team.name}</Text>
             </View>
         ))}
         </View>
@@ -141,12 +148,9 @@ export default function BonusScreen() {
         <Text style={styles.sectionTitle}>{title}</Text>
         {players.map((p) => (
         <View key = {p.id} style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={styles.playerText}>
-            • {p.first_name} {p.last_name} ({p.position}) —
+          <Text style={styles.playerText}numberOfLines={1}ellipsizeMode="tail">
+            • {p.first_name} {p.last_name} ({p.position})
           </Text>
-          <Image style={{ width: 20, height: 20 }}
-                source={{ uri: `${BASE_URL}/api${p.logo}` }}
-            />
           <Text style={styles.teamName}>
             {p.team_name}
           </Text>
@@ -156,10 +160,57 @@ export default function BonusScreen() {
     );
   };
 
+  const renderMonthlyBonus = (data: MonthlyBonus[]) => {
+    if (!data || data.length === 0) return null;
+
+    return (
+      <View style={styles.section}>
+  {data.map((m) => (
+    <View key={m.id} style={styles.monthCard}>
+      
+      {/* HEADER (COLORED) */}
+      <View style={styles.monthHeader}>
+        <Text style={styles.monthHeaderText}>
+          {m.month} — {m.category}
+        </Text>
+      </View>
+
+      {/* BODY (WHITE) */}
+      <View style={styles.monthBody}>
+        {/* TEXT LEFT */}
+        <View style={styles.monthTextBlock}>
+          <Text style={styles.playerName}>{m.player}</Text>
+          <Text style={styles.teamNameSmall}>{m.team}</Text>
+
+          <View style={styles.bonusTag}>
+            <Text style={styles.bonusText}>
+              +{m.bonus_amount.toFixed(1)}M
+            </Text>
+          </View>
+        </View>
+
+        {/* IMAGE RIGHT */}
+        {m.photo ? (
+          <Image
+            source={{ uri: `${BASE_URL}${m.photo}` }}
+            style={styles.playerImageRight}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.placeholderImageRight} />
+        )}
+
+      </View>
+
+    </View>
+  ))}
+</View>
+    );
+  };
+
   return (
     <ScrollView>
         <Text style={styles.header}>Bonus Overview</Text>
-
       {/* Season Picker */}
       <View style={{ paddingHorizontal: 15, flexDirection: "row", alignContent: "space-between"}}>
       <View style={styles.pickerContainer}>
@@ -194,36 +245,66 @@ export default function BonusScreen() {
         </Picker>
       </View>
       </View>
-
       {loading ? (
         <ActivityIndicator size="large" color="#00C2FF" style={{ marginTop: 20 }} />
       ) : bonusData ? (
         <View style={styles.container}>
-        <View style={{ alignItems: "center", backgroundColor: "#0047a3ff", padding: 10, borderRadius: 10, marginBottom: 10 }}>
-          <Text style={styles.subHeader}>Total Bonus</Text>
-        </View>
-          {Object.entries(bonusData.total_bonus).map(([teamId, data]: [string, any]) => (
-            <View key={teamId} style={{flex:1, justifyContent:"space-between", flexDirection:"row", alignContent:"space-between", backgroundColor: "#0066ccff", padding: 8, borderRadius: 5, marginVertical: 2 }}>
-              <Text style={{fontSize: 14, fontWeight: "600", color: "white"}}>{data.team_name}: </Text>
-              <Text style={{fontSize: 14, fontWeight: "600", color: "white"}}>{Number(data.bonus ?? 0).toFixed(1)}M</Text>
-            </View>
+          <View style={{ alignItems: "center", backgroundColor: "#0047a3ff", padding: 10, borderRadius: 10, marginBottom: 10 }}>
+            <Text style={styles.subHeader}>Total Bonus</Text>
+          </View>
+
+          {Object.entries(bonusData.total_bonus)
+            .sort(([, a], [, b]) => (b.bonus ?? 0) - (a.bonus ?? 0)) // DESCENDING SORT
+            .map(([teamId, data]: [string, any], index) => (
+              <View 
+                key={teamId}
+                style={{
+                  flex:1,
+                  justifyContent:"space-between",
+                  flexDirection:"row",
+                  backgroundColor: "#0066ccff",
+                  padding: 8,
+                  borderRadius: 5,
+                  marginVertical: 2
+                }}
+              >
+                <Text style={{fontSize: 14, fontWeight: "600", color: "white"}}>
+                  {index + 1}. {data.team_name}
+                </Text>
+
+                <Text style={{fontSize: 14, fontWeight: "600", color: "white"}}>
+                  {Number(data.bonus ?? 0).toFixed(1)}M
+                </Text>
+              </View>
             ))}
-        <View style={{ alignItems: "center", backgroundColor: "#0047a3ff", padding: 10, borderRadius: 10, marginVertical: 10, marginTop:20 , marginBottom:2.5}}>
-          <Text style={styles.subHeader}>Weekly Details</Text>
-        </View>
+      <View style={{ alignItems: "center", backgroundColor: "#0047a3ff", padding: 10, borderRadius: 10, marginVertical: 10, marginTop:20 , marginBottom:2.5}}>
+        <Text style={styles.subHeader}>Weekly Bonus</Text>
+     </View>
           {bonusData.weekly_details.map((week) => (
             <View key={week.id} style={styles.weekCard}>
               <Text style={styles.weekTitle}>Gameweek {week.gameweek}</Text>
-              {renderTeamList("Highest Point Teams", week.highest_point_teams)}
-              {renderPlayerList("Highest Point Players", week.highest_point_players)}
-              {renderPlayerList("Best Goalkeepers", week.highest_gk_players)}
-              {renderPlayerList("Best Defenders", week.highest_df_players)}
-              {renderPlayerList("Best Midfielders", week.highest_mf_players)}
-              {renderPlayerList("Best Forwards", week.highest_fw_players)}
-              {renderPlayerList("Team of the Week Bonus", week.special_bonus_players)}
+              {renderTeamList("Highest Point Teams (1M)", week.highest_point_teams)}
+              {renderPlayerList("Highest Point Players (1M)", week.highest_point_players)}
+              {renderPlayerList("Best Goalkeepers (0.5M)", week.highest_gk_players)}
+              {renderPlayerList("Best Defenders (0.5M)", week.highest_df_players)}
+              {renderPlayerList("Best Midfielders (0.5M)", week.highest_mf_players)}
+              {renderPlayerList("Best Forwards (0.5M)", week.highest_fw_players)}
+              {renderPlayerList("Team of the Week Bonus (0.3M)", week.special_bonus_players)}
             </View>
           ))}
-        </View>
+          {/* Monthly Bonus Section */}
+          <View style={{ 
+            alignItems: "center",
+            backgroundColor: "#0047a3ff",
+            padding: 10,
+            borderRadius: 10,
+            marginVertical: 10,
+            marginTop:20,
+          }}>
+            <Text style={styles.subHeader}>Monthly Bonus</Text>
+          </View>
+          {renderMonthlyBonus(bonusData.monthly_bonus)}
+        </View>        
       ) : (
         <Text style={styles.noData}>No data available</Text>
       )}
@@ -266,11 +347,6 @@ const styles = StyleSheet.create({
     color: "#aaa",
     marginBottom: 5,
   },
-  bonusText: {
-    color: "#000000ff",
-    fontSize: 15,
-    marginVertical: 2,
-  },
   weekCard: {
     backgroundColor: "#082e63ff",
     borderRadius: 10,
@@ -292,6 +368,7 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   playerText: {
+    flex:1,
     color: "#fff",
     fontSize: 14,
     marginLeft: 10,
@@ -301,5 +378,86 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
   },
-  teamName: { fontSize: 14, fontWeight: "bold", color: "white"}
+  teamName: {fontSize: 14, fontWeight: "bold", color: "white", maxWidth: 120},
+monthCard: {
+  borderRadius: 12,
+  overflow: "hidden",
+  marginBottom: 18,
+  backgroundColor: "white",
+  shadowColor: "#000",
+  shadowOpacity: 0.15,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 3 },
+  elevation: 5,
+},
+
+/* HEADER */
+monthHeader: {
+  backgroundColor: "#0047a3",
+  paddingVertical: 10,
+  paddingHorizontal: 12,
+},
+
+monthHeaderText: {
+  fontSize: 16,
+  fontWeight: "700",
+  color: "white",
+  letterSpacing: 0.5,
+  textTransform: "uppercase",
+},
+
+/* BODY */
+monthBody: {
+  backgroundColor: "white",
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: 12,
+},
+
+monthTextBlock: {
+  flex: 1,
+  paddingRight: 10,
+},
+
+playerName: {
+  fontSize: 17,
+  fontWeight: "700",
+  color: "#222",
+  marginBottom: 4,
+},
+
+teamNameSmall: {
+  fontSize: 14,
+  color: "#666",
+  marginBottom: 10,
+},
+
+bonusTag: {
+  backgroundColor: "#00c853",
+  alignSelf: "flex-start",
+  paddingHorizontal: 10,
+  paddingVertical: 5,
+  borderRadius: 6,
+},
+
+bonusText: {
+  color: "white",
+  fontWeight: "700",
+  fontSize: 14,
+},
+
+playerImageRight: {
+  width: 80,
+  height: 110,
+  borderRadius: 8,
+  backgroundColor: "#eee",
+},
+
+placeholderImageRight: {
+  width: 80,
+  height: 110,
+  borderRadius: 8,
+  backgroundColor: "#ccc",
+}
 });

@@ -85,30 +85,69 @@ const LeagueTableScreen = () => {
     }
   };
 
-  const renderItem = ({ item, index }: { item: LeagueData; index: number }) => (
-    <TouchableOpacity
-      style={[
-        styles.row,
-        { backgroundColor: index % 2 === 0 ? '#f9f9f9' : '#fff' },
-      ]}
-      onPress={() => handleTeamPress(item)}
-    >
-      <Text style={styles.rank}>{item.rank}</Text>
-      <View style={styles.teamCell}>
-        <Image source={{ uri: `${BASE_URL}/api${item.logo}` }} style={styles.teamLogo} />
-        <Text style={styles.teamName}>{item.team}</Text>
-      </View>
-      <Text style={styles.cell}>{item.wins}</Text>
-      <Text style={styles.cell}>{item.draws}</Text>
-      <Text style={styles.cell}>{item.losses}</Text>
-      <Text style={[styles.cell, styles.points]}>{item.points}</Text>
-    </TouchableOpacity>
-  );
+  const getRowStyle = (rank: number, index: number) => {
+    if (rank === 1 || rank === 2 || rank === 3) {
+      return {
+        backgroundColor: "#1e90ff33",
+        borderLeftWidth: 5,
+        borderLeftColor: "#1e90ff",
+      };
+    }
+
+    // 4: UCL Qualifier
+    if (rank === 4) {
+      return {
+        backgroundColor: "#ffd70033",
+        borderLeftWidth: 5,
+        borderLeftColor: "#ffd700",
+      };
+    }
+
+    // 9 & 10: Relegation Zone
+    if (rank === 9 || rank === 10) {
+      return {
+        backgroundColor: "#ff4d4d33",
+        borderLeftWidth: 5,
+        borderLeftColor: "#ff1a1a",
+      };
+    }
+
+    // Default alternating rows
+    return {
+      backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#fff",
+      borderLeftWidth: 0,
+    };
+  };
+
+  const renderItem = ({ item, index }: { item: LeagueData; index: number }) => {
+    const rowStyle = getRowStyle(item.rank, index);
+
+    return (
+      <TouchableOpacity
+        style={[styles.row, rowStyle]}
+        onPress={() => handleTeamPress(item)}
+      >
+        <Text style={styles.rank}>{item.rank}</Text>
+
+        <View style={styles.teamCell}>
+          <Image
+            source={{ uri: `${BASE_URL}/api${item.logo}` }}
+            style={styles.teamLogo}
+          />
+          <Text style={styles.teamName}>{item.team}</Text>
+        </View>
+
+        <Text style={styles.cell}>{item.wins}</Text>
+        <Text style={styles.cell}>{item.draws}</Text>
+        <Text style={styles.cell}>{item.losses}</Text>
+        <Text style={[styles.cell, styles.points]}>{item.points}</Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>🏆 League Table</Text>
-
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={selectedSeasonId}
@@ -147,13 +186,28 @@ const LeagueTableScreen = () => {
             <Text style={styles.headerText}>L</Text>
             <Text style={[styles.headerText, { color: '#ffffffff' }]}>Pts</Text>
           </View>
-
           <FlatList
             data={seasonData?.table || []}
             renderItem={renderItem}
             keyExtractor={(item) => item.rank.toString()}
             showsVerticalScrollIndicator={false}
           />
+          <View style={{ marginTop: 15 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+              <View style={{ width: 18, height: 18, backgroundColor: "#1e90ff33", borderLeftWidth: 3, borderLeftColor: "#1e90ff", marginRight: 8 }} />
+              <Text style={{ fontSize: 14, color: "#333" }}>UCL Qualification (1st – 3rd)</Text>
+            </View>
+
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+              <View style={{ width: 18, height: 18, backgroundColor: "#ffd70033", borderLeftWidth: 3, borderLeftColor: "#ffd700", marginRight: 8 }} />
+              <Text style={{ fontSize: 14, color: "#333" }}>UCL Qualifier Playoff (4th)</Text>
+            </View>
+
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+              <View style={{ width: 18, height: 18, backgroundColor: "#ff4d4d33", borderLeftWidth: 3, borderLeftColor: "#ff1a1a", marginRight: 8 }} />
+              <Text style={{ fontSize: 14, color: "#333" }}>Relegation Zone (9th – 10th)</Text>
+            </View>
+          </View>
         </>
       )}
     </View>
@@ -162,7 +216,7 @@ const LeagueTableScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F4F6FA', padding: 16 },
-  header: { fontSize: 24, fontWeight: '700', textAlign: 'center', marginVertical: 10, color: '#222' },
+  header: { fontSize: 22, fontWeight: '700', textAlign: 'center', marginVertical: 10, color: '#222' },
   pickerContainer: {
     borderRadius: 8,
     backgroundColor: '#fff',

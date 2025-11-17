@@ -79,49 +79,66 @@ export default function AvailablePlayers() {
           marginBottom: 8,
           borderRadius: 6,
         }}
+        placeholderTextColor={"#8a8a8aff"}
       />
-      <Picker
-        selectedValue={selectedTeam}
-        onValueChange={(value) => setSelectedTeam(value)}
-        style={{ marginBottom: 8 }}
-      >
-        <Picker.Item label="All Teams" value="" />
-        {teams.map((t) => (
-          <Picker.Item key={t.id} label={t.name} value={t.name} />
-        ))}
-      </Picker>
+      <View style={{ flexDirection: "row", gap: 10, marginBottom: 8 }}>
+        <View style={{ flex: 1, borderColor:"#000" }}>
+          <Picker
+            selectedValue={selectedTeam}
+            onValueChange={(value) => setSelectedTeam(value)}
+            style={{
+              color: "#000",
+              backgroundColor: "#fff",
+              borderRadius: 6,
+            }}
+            dropdownIconColor="#000"
+          >
+            <Picker.Item label="All Teams" value="" />
+            {teams.map((t) => (
+              <Picker.Item key={t.id} label={t.name} value={t.name} />
+            ))}
+          </Picker>
+        </View>
 
-      <Picker
-        selectedValue={selectedPosition}
-        onValueChange={(value) => setSelectedPosition(value)}
-        style={{ marginBottom: 8 }}
-      >
-        <Picker.Item label="All Positions" value="" />
-        <Picker.Item label="Goalkeeper" value="GK" />
-        <Picker.Item label="Defender" value="DF" />
-        <Picker.Item label="Midfielder" value="MF" />
-        <Picker.Item label="Forward" value="FW" />
-      </Picker>
-
-      {/* Player list */}
+        <View style={{ flex: 1 }}>
+          <Picker
+            selectedValue={selectedPosition}
+            onValueChange={(value) => setSelectedPosition(value)}
+            style={{
+              color: "#000",
+              backgroundColor: "#fff",
+              borderRadius: 6,
+            }}
+            dropdownIconColor="#000"
+          >
+            <Picker.Item label="All Positions" value="" />
+            <Picker.Item label="Goalkeeper" value="GK" />
+            <Picker.Item label="Defender" value="DF" />
+            <Picker.Item label="Midfielder" value="MF" />
+            <Picker.Item label="Forward" value="FW" />
+          </Picker>
+        </View>
+      </View>
       <FlatList
         data={filteredPlayers}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() => router.push(`${item.id}`)}
+            onPress={() => router.push(`/${item.id}`)}
             style={{marginVertical: 4, borderRadius: 8, overflow: "hidden", backgroundColor: "#ffffff", elevation: 2}}
           >
             <ImageBackground source={require("../assets/images/tw_banner.png")} style={{flexDirection:"row", borderRadius: 8, padding: 15, justifyContent: "space-between", alignItems: "center"}} resizeMode="cover" imageStyle={{ opacity: 0.8 }}>
-              <View>
-                <Text style={{fontSize:18, fontWeight: "600"}}>{item.full_name}</Text>
-                <Text style= {{fontWeight: "semi-bold"}}>{item.team}</Text>
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <Text style={{fontSize:18, fontWeight: "600"}}
+                numberOfLines={1}
+                ellipsizeMode="tail">{item.full_name}</Text>
+                <Text style= {{fontWeight: "bold"}}>{item.team}</Text>
                 <Text>Club: {item.club}</Text>
                 <Text>Points: {item.points} || Position: {item.position}</Text>
               </View>
               <Image
                 source={{ uri: item.photo }}
-                style={{ width: 80, height: 80, borderRadius: 20}}
+                style={{ width: 80, height: 80, borderRadius: 20, flexShrink: 0}}
                 resizeMode="contain"
               />
             </ImageBackground>

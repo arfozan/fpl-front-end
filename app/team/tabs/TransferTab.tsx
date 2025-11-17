@@ -13,6 +13,8 @@ interface Transfer {
   loan_gameweek?: number | null;
   is_loan_end?: boolean;
   description?: string | null;
+  to_loan: boolean;
+  back_from_loan: boolean;
 }
 
 interface TeamDetail {
@@ -36,26 +38,26 @@ export default function TransfersTab({
 
     if (currentTeamName === item.from_team_name) {
       otherTeam = item.to_team_name;
-      if (item.is_loan_end) {
-        label = `End of Loan, Back to ${otherTeam}`;
+      if (item.back_from_loan) {
+        label = `End of Loan, back to ${otherTeam}`;
         badgeColor = "#f44336";
         badgeText = "Loan End";
-      } else if (item.is_loan) {
+      } else if (item.to_loan) {
         label = `Loaned Out To: ${otherTeam}`;
         badgeColor = "#ff9800";
         badgeText = "Loan Out";
       } else {
         label = `To: ${otherTeam}`;
-        badgeColor = "#e53935"; // 🔴 Red for Transfer Out
+        badgeColor = "#e53935"; 
         badgeText = "Transfer Out";
       }
     } else if (currentTeamName === item.to_team_name) {
       otherTeam = item.from_team_name;
-      if (item.is_loan_end) {
-        label = `Back from Loan (${otherTeam})`;
+      if (item.back_from_loan) {
+        label = `End of Loan, Back from ${otherTeam}`;
         badgeColor = "#4caf50";
         badgeText = "Loan Return";
-      } else if (item.is_loan) {
+      } else if (item.to_loan) {
         label = `Loaned In from ${otherTeam}`;
         badgeColor = "#ffc107";
         badgeText = "Loan In";
@@ -82,8 +84,13 @@ export default function TransfersTab({
         </View>
 
         <Text style={styles.playerName}>{item.player_name}</Text>
-        <Text style={styles.transferText}>{label}</Text>
-        <Text style={{fontStyle:"italic"}}>Clause: {item.description}</Text>
+        <Text style={styles.transferText}>
+          {label?.trim() || "Free Agent"}
+        </Text>
+        <Text style={{ fontStyle: "italic" }}>
+          Clause: {item.description?.trim() || "None"}
+        </Text>
+
 
         <View style={styles.footer}>
           <Text style={styles.amount}>
