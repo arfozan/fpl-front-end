@@ -4,14 +4,14 @@ import { Alert } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import Login from "../login";
 import MyTeam from "../myteam";
+import NoTeam from "../NoTeam"; // ⬅️ Import the new screen
 
 export default function ProfileTab() {
   const { user, fetchWithAuth } = useAuth();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !user.team) return; // ⬅️ ONLY fetch contracts if user has a team
 
-    // fetch expiring contracts after login
     fetchWithAuth(`${BASE_URL}/api/my-team-players/`)
       .then((res) => res.json())
       .then((data) => {
@@ -25,5 +25,12 @@ export default function ProfileTab() {
       })
       .catch((err) => console.error("Failed to fetch expiring contracts:", err));
   }, [user]);
-  return user ? <MyTeam /> : <Login />;
+
+  return !user ? (
+    <Login />
+  ) : user.hasNoTeam ? (
+    <NoTeam />
+  ) : (
+    <MyTeam />
+  );
 }

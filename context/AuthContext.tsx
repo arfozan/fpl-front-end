@@ -142,15 +142,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) {
-        setUser(null);
+      const data = await res.json();
+
+      if (!data.has_team) {
+        setUser({ hasNoTeam: true } as any);
         return;
       }
 
-      const team: Team = await res.json();
-      setUser(team);
+      setUser(data);
     } catch (err) {
-      console.error("Fetch team error:", err);
       setUser(null);
     }
   };

@@ -234,10 +234,9 @@ export default function PlayerDetailScreen() {
               {/* 🔴 Red gradient overlay if player is unavailable */}
               {player.weekly_wage === 0 && (
                 <LinearGradient
-                  colors={["rgba(255,0,0,0.6)", "rgba(255,0,0,0.1)", "transparent"]}
-                  style={StyleSheet.absoluteFillObject}
-                  start={{ x: 0.5, y: 0 }}
-                  end={{ x: 0.5, y: 1 }}
+                  colors={["rgba(214, 16, 16, 0.6)", "rgba(255,0,0,0.1)", "transparent"]}
+                  start={{ x: 0.5, y: 1 }}
+                  end={{ x: 0.5, y: 0 }}
                 />
               )}
               <View style={styles.topCard}>
@@ -402,7 +401,7 @@ export default function PlayerDetailScreen() {
 const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   headerBg: { width: "100%", height: 260, marginBottom: 12 },
-  topCard: { alignItems: "center", marginTop: 80 },
+  topCard: { alignItems: "center", marginTop: 80, borderRadius:10 },
   playerPhoto: {
     width: 130,
     height: 170,

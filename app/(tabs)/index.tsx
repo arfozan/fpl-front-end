@@ -438,7 +438,7 @@ useEffect(() => {
                       <Text>
                         Club: {item.club_name} || Position: {item.position}
                       </Text>
-                      <Text style={{ color: "#f18b8bff" }}>
+                      <Text style={{ color: "#da3d3dff" }}>
                         ⏳ {formatExpiry(item.expires_at)}
                       </Text>
                       <View

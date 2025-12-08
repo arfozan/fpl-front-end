@@ -5,14 +5,14 @@ import { useRouter } from "expo-router";
 import * as VideoThumbnails from "expo-video-thumbnails";
 import React, { useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Video as VideoCompressor } from "react-native-compressor";
 import ViewShot from "react-native-view-shot";

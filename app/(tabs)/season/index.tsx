@@ -115,7 +115,8 @@ const LeagueTableScreen = () => {
     // Default alternating rows
     return {
       backgroundColor: index % 2 === 0 ? "#f9f9f9" : "#fff",
-      borderLeftWidth: 0,
+      borderLeftWidth: 5,
+      borderLeftColor: "#d4d4d4ff",
     };
   };
 
