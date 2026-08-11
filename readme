@@ -1,2 +1,1 @@
-eas apk build-
-    eas build -p android --profile preview
+npx expo run:android --variant release

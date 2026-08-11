@@ -11,11 +11,12 @@ export default function ProfileTab() {
   useEffect(() => {
     if (!user) return;
 
-    // fetch expiring contracts after login
+    // Fetch expiring contracts after login
     fetchWithAuth(`${BASE_URL}/api/my-team-players/`)
       .then((res) => res.json())
       .then((data) => {
         const count = data.expiring_contracts_count || 0;
+
         if (count > 0) {
           Alert.alert(
             "⚠️ Contract Reminder",
@@ -23,7 +24,35 @@ export default function ProfileTab() {
           );
         }
       })
-      .catch((err) => console.error("Failed to fetch expiring contracts:", err));
+      .catch((err) =>
+        console.error("Failed to fetch expiring contracts:", err)
+      );
   }, [user]);
-  return user ? <MyTeam /> : <Login />;
+
+  const sendTestNotification = async () => {
+    try {
+      const res = await fetchWithAuth(
+        `${BASE_URL}/api/test-notification/`,
+        {
+          method: "POST",
+        }
+      );
+
+      const data = await res.json();
+
+      console.log("Notification:", data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  if (!user) {
+    return <Login />;
+  }
+
+  return (
+    <>
+      <MyTeam />
+    </>
+  );
 }

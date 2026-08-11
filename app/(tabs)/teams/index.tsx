@@ -45,7 +45,7 @@ export default function TeamsScreen() {
           Balance: {item.current_balance.toFixed(2)}
         </Text>
         <Text style={styles.balance}>
-          Forecast: {item.forecast_end_balance.toFixed(2)}
+          Predicted Balance: {item.forecast_end_balance.toFixed(2)}
         </Text>
       </TouchableOpacity>
     </Link>

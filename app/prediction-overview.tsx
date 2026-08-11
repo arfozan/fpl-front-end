@@ -46,31 +46,38 @@ export default function PredictionOverview() {
 
       const nums = json.map((r: any) => r.round_number);
       setRounds(nums);
-      setSelectedRound(nums[0] || null);
+      setSelectedRound(null);
     } catch (e) {
       console.log("Failed loading rounds");
     }
   };
 
   useEffect(() => {
-    if (selectedSeason && selectedRound != null) loadOverview();
+    if (selectedSeason) {
+      loadOverview();
+    }
   }, [selectedSeason, selectedRound]);
 
   const loadOverview = async () => {
     try {
       setLoading(true);
 
-      const res = await fetchWithAuth(
-        `${BASE_URL}/api/prediction/overview/?season=${selectedSeason}&round=${selectedRound}`
-      );
+      let url = `${BASE_URL}/api/prediction/overview/?season=${selectedSeason}`;
+
+      if (selectedRound !== null) {
+        url += `&round=${selectedRound}`;
+      }
+
+      const res = await fetchWithAuth(url);
       const json = await res.json();
 
       setLeaderboard(json.leaderboard || []);
       setPredictions(json.predictions || []);
     } catch (e) {
       console.log("Error loading overview", e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   if (!user) {
@@ -111,12 +118,22 @@ export default function PredictionOverview() {
       {/* ✅ Round Picker */}
       <View style={styles.pickerBox}>
         <Text style={styles.pickerLabel}>Gameweek</Text>
+
         <Picker
           selectedValue={selectedRound}
           onValueChange={(v) => setSelectedRound(v)}
         >
+          <Picker.Item
+            label="All Gameweeks"
+            value={null}
+          />
+
           {rounds.map((r) => (
-            <Picker.Item key={r} label={`GW${r}`} value={r} />
+            <Picker.Item
+              key={r}
+              label={`GW ${r}`}
+              value={r}
+            />
           ))}
         </Picker>
       </View>

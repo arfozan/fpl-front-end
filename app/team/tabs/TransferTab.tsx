@@ -26,7 +26,7 @@ export default function TransfersTab({
   team: TeamDetail;
   transfers: Transfer[];
 }) {
-  const currentTeamName = team?.team_name;
+  const currentTeamName = team?.name;
 
   const renderTransfer = ({ item }: { item: Transfer }) => {
     let label = "";

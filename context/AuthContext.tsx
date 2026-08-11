@@ -1,5 +1,6 @@
 // context/AuthContext.tsx
 import { BASE_URL } from "@/config";
+import { registerDeviceToken } from "@/services/deviceToken";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
@@ -119,6 +120,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const data = await res.json();
 
+      await AsyncStorage.setItem("accessToken", data.access);
+
+      console.log("ACCESS TOKEN:");
+      console.log(data.access);
+
       if (!res.ok) {
         throw new Error(data?.detail || "Invalid username or password");
       }
@@ -149,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const team: Team = await res.json();
       setUser(team);
+      registerDeviceToken(token);
     } catch (err) {
       console.error("Fetch team error:", err);
       setUser(null);

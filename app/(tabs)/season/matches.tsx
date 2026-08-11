@@ -3,12 +3,12 @@ import { Picker } from "@react-native-picker/picker";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 interface Team {
@@ -86,10 +86,19 @@ export default function MatchesScreen() {
   const fetchFixtures = async (seasonId: number) => {
     try {
       setLoading(true);
+
       const fixturesRes = await axios.get<SeasonFixtures>(
         `${BASE_URL}/api/season-fixtures/?season_id=${seasonId}`
       );
-      setSelectedSeason(fixturesRes.data);
+
+      const data = fixturesRes.data;
+
+      // Latest Gameweek first
+      data.rounds = [...data.rounds].sort(
+        (a, b) => b.round_number - a.round_number
+      );
+
+      setSelectedSeason(data);
     } catch (error) {
       console.error("Error fetching season fixtures:", error);
     } finally {
@@ -100,17 +109,29 @@ export default function MatchesScreen() {
   // ========== Filter Rounds ==========
   const filteredRounds: Round[] =
     selectedSeason && Array.isArray(selectedSeason.rounds)
-      ? selectedSeason.rounds.map((round: Round) => ({
-          ...round,
-          matches:
-            selectedTeam === "all"
-              ? round.matches
-              : round.matches.filter(
-                  (m: Match) =>
-                    m.home_team.id === selectedTeam ||
-                    m.away_team.id === selectedTeam
-                ),
-        }))
+      ? [...selectedSeason.rounds]
+          // Latest Gameweek first
+          .sort((a, b) => b.round_number - a.round_number)
+
+          // Hide rounds with no matches
+          .filter((round) => round.matches && round.matches.length > 0)
+
+          // Apply team filter
+          .map((round: Round) => ({
+            ...round,
+            matches:
+              selectedTeam === "all"
+                ? round.matches
+                : round.matches.filter(
+                    (m: Match) =>
+                      m.home_team.id === selectedTeam ||
+                      m.away_team.id === selectedTeam
+                  ),
+          }))
+
+          // If a team is selected, also hide rounds where
+          // that team has no match
+          .filter((round) => round.matches.length > 0)
       : [];
 
   if (loading) {

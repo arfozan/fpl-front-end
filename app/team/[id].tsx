@@ -1,6 +1,6 @@
 import { BASE_URL } from "@/config";
-import { useLocalSearchParams, useNavigation } from "expo-router";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { Stack, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Dimensions, Text, View } from "react-native";
 import { TabView } from "react-native-tab-view";
 
@@ -25,8 +25,6 @@ export default function TeamDetailScreen() {
     { key: "matches", title: "Matches" },
   ]);
 
-  const navigation = useNavigation();
-
   useEffect(() => {
     Promise.all([
       fetch(`${BASE_URL}/api/team/${id}/`).then((res) => res.json()),
@@ -38,15 +36,6 @@ export default function TeamDetailScreen() {
       })
       .finally(() => setLoading(false));
   }, [id]);
-
-  // Set the header title dynamically
-  useLayoutEffect(() => {
-    if (team) {
-      navigation.setOptions({
-        title: team.name, // now will replace [id] in header
-      });
-    }
-  }, [team, navigation]);
 
   if (loading) {
     return (
@@ -80,11 +69,19 @@ export default function TeamDetailScreen() {
   };
 
   return (
-    <TabView
-      navigationState={{ index, routes }}
-      renderScene={renderScene}
-      onIndexChange={setIndex}
-      initialLayout={initialLayout}
-    />
+    <>
+      <Stack.Screen
+        options={{
+          title: team?.name ?? "Team",
+        }}
+      />
+
+      <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={initialLayout}
+      />
+    </>
   );
 }

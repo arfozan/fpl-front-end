@@ -1,5 +1,6 @@
 import { Picker } from "@react-native-picker/picker";
 import axios from "axios";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -7,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { BASE_URL } from "../../../config";
@@ -29,7 +31,7 @@ interface BonusPlayer {
   last_name: string;
   position: string;
   team_name: string;
-  logo: Image;
+  logo: string;
 }
 
 interface WeeklyDetail {
@@ -45,11 +47,32 @@ interface WeeklyDetail {
   special_bonus_players: BonusPlayer[];
 }
 
+interface MonthlyBonus {
+  id: number;
+  season: string;
+  month: string;
+  team: string;
+  team_id: number | null;
+  player: string;
+  photo: string | null;
+  bonus_amount: number;
+  category: string;
+}
+
+interface TotalBonus {
+  team_id: number;
+  team_name: string;
+  logo: string;
+  manager_name: string;
+  bonus: number;
+}
+
 interface BonusData {
   season_id: number;
   team_id: number | null;
-  total_bonus: Record<string, number>;
+  total_bonus: TotalBonus[];
   weekly_details: WeeklyDetail[];
+  monthly_bonus: MonthlyBonus[];
 }
 
 export default function BonusScreen() {
@@ -57,44 +80,50 @@ export default function BonusScreen() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
+
   const [loading, setLoading] = useState(false);
-  const [bonusData, setBonusData] = useState<BonusData | null>(null);
   const [loadingSeasons, setLoadingSeasons] = useState(true);
 
-  // Fetch seasons from backend
+  const [bonusData, setBonusData] = useState<BonusData | null>(null);
+
   useEffect(() => {
     const fetchSeasons = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/api/seasons/`);
+
         const formatted = res.data.map((season: any) => ({
           id: season.id,
           name: season.season_name,
         }));
+
         setSeasons(formatted);
-        if (formatted.length > 0) setSelectedSeason(formatted[0].id);
+
+        if (formatted.length > 0) {
+          setSelectedSeason(formatted[0].id);
+        }
       } catch (err) {
-        console.error("Error fetching seasons:", err);
+        console.error("Error loading seasons:", err);
       } finally {
         setLoadingSeasons(false);
       }
     };
+
     fetchSeasons();
   }, []);
 
-  // Fetch teams
   useEffect(() => {
     const fetchTeams = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/api/teams/`);
         setTeams(res.data);
       } catch (err) {
-        console.warn("Couldn't load teams:", err);
+        console.error(err);
       }
     };
+
     fetchTeams();
   }, []);
 
-  // Fetch bonus whenever season or team changes
   useEffect(() => {
     if (!selectedSeason) return;
     fetchBonus();
@@ -103,129 +132,396 @@ export default function BonusScreen() {
   const fetchBonus = async () => {
     try {
       setLoading(true);
+
       const url = `${BASE_URL}/api/bonus/season/${selectedSeason}/${
         selectedTeam ? `?team=${selectedTeam}` : ""
       }`;
+
       const res = await axios.get(url);
+
       setBonusData(res.data);
     } catch (err) {
-      console.error("Error fetching bonus data:", err);
+      console.error(err);
       setBonusData(null);
     } finally {
       setLoading(false);
     }
+    
   };
 
   const renderTeamList = (title: string, teams: Team[]) => {
-    if (!teams || teams.length === 0) return null;
-    return (
-        <View>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {teams.map(team => (
-            <View style={{ flex:1 ,flexDirection: "row", alignContent: "center" }} key={team.id}>
-            <Image style={{ width: 20, height: 20 }}
-                source={{ uri: `${BASE_URL}/api${team.logo}` }}
-            />
-            <Text style={{fontWeight: "bold", color: "white"}}>{team.name}</Text>
-            <Text style={styles.playerText}>{team.manager_name}</Text>
-            
-            </View>
-        ))}
-        </View>
-    );
-};
-  const renderPlayerList = (title: string, players: BonusPlayer[]) => {
-    if (!players || players.length === 0) return null;
+    if (!teams.length) return null;
+
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{title}</Text>
+
+        {teams.map((team) => (
+          <View
+            key={team.id}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 5,
+            }}
+          >
+            {team.logo && (
+              <Image
+                source={{ uri: `${BASE_URL}/api${team.logo}` }}
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  marginRight: 8,
+                }}
+              />
+            )}
+
+            <Text style={styles.teamName}>{team.name}</Text>
+
+            {!!team.manager_name && (
+              <Text style={styles.playerText}>
+                {" "}
+                ({team.manager_name})
+              </Text>
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  const renderPlayerList = (title: string, players: BonusPlayer[]) => {
+    if (!players.length) return null;
+
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+
         {players.map((p) => (
-        <View key = {p.id} style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={styles.playerText}>
-            • {p.first_name} {p.last_name} ({p.position}) —
-          </Text>
-          <Image style={{ width: 20, height: 20 }}
-                source={{ uri: `${BASE_URL}/api${p.logo}` }}
+          <View
+            key={p.id}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 5,
+            }}
+          >
+            <Text style={styles.playerText}>
+              • {p.first_name} {p.last_name} ({p.position})
+            </Text>
+
+            <Image
+              source={{ uri: `${BASE_URL}/api${p.logo}` }}
+              style={{
+                width: 20,
+                height: 20,
+                marginHorizontal: 8,
+              }}
             />
-          <Text style={styles.teamName}>
-            {p.team_name}
-          </Text>
-        </View>
+
+            <Text style={styles.teamName}>
+              {p.team_name}
+            </Text>
+          </View>
         ))}
       </View>
     );
   };
 
   return (
-    <ScrollView>
-        <Text style={styles.header}>Bonus Overview</Text>
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ paddingBottom: 30 }}
+    >
+      <Text style={styles.header}>Bonus Overview</Text>
 
-      {/* Season Picker */}
-      <View style={{ paddingHorizontal: 15, flexDirection: "row", alignContent: "space-between"}}>
-      <View style={styles.pickerContainer}>
-        {loadingSeasons ? (
-          <ActivityIndicator color="#00C2FF" />
-        ) : (
+      {/* Pickers */}
+
+      <View
+        style={{
+          paddingHorizontal: 15,
+          flexDirection: "row",
+        }}
+      >
+        <View style={styles.pickerContainer}>
+          {loadingSeasons ? (
+            <ActivityIndicator color="#00C2FF" />
+          ) : (
+            <Picker
+              selectedValue={selectedSeason}
+              style={styles.picker}
+              dropdownIconColor="#fff"
+              onValueChange={(value) => setSelectedSeason(value)}
+            >
+              {seasons.map((season) => (
+                <Picker.Item
+                  key={season.id}
+                  label={season.name}
+                  value={season.id}
+                />
+              ))}
+            </Picker>
+          )}
+        </View>
+
+        <View style={styles.pickerContainer}>
           <Picker
-            selectedValue={selectedSeason}
+            selectedValue={selectedTeam}
             style={styles.picker}
-            onValueChange={(value) => setSelectedSeason(value)}
-            dropdownIconColor='#fff'
+            dropdownIconColor="#fff"
+            onValueChange={(value) => setSelectedTeam(value)}
           >
-            {seasons.map((season) => (
-              <Picker.Item key={season.id} label={season.name} value={season.id} />
+            <Picker.Item
+              label="All Teams"
+              value={null}
+            />
+
+            {teams.map((team) => (
+              <Picker.Item
+                key={team.id}
+                label={team.name}
+                value={team.id}
+              />
             ))}
           </Picker>
-        )}
-      </View>
-
-      {/* Team Picker */}
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={selectedTeam}
-          style={styles.picker}
-          onValueChange={(value) => setSelectedTeam(value)}
-          dropdownIconColor='#fff'
-        >
-          <Picker.Item label="All Teams" value={null} />
-          {teams.map((team) => (
-            <Picker.Item key={team.id} label={team.name} value={team.id} />
-          ))}
-        </Picker>
-      </View>
+        </View>
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#00C2FF" style={{ marginTop: 20 }} />
-      ) : bonusData ? (
+        <ActivityIndicator
+          size="large"
+          color="#00C2FF"
+          style={{ marginTop: 30 }}
+        />
+      ) : !bonusData ? (
+        <Text style={styles.noData}>
+          No data available
+        </Text>
+      ) : (
         <View style={styles.container}>
-        <View style={{ alignItems: "center", backgroundColor: "#0047a3ff", padding: 10, borderRadius: 10, marginBottom: 10 }}>
-          <Text style={styles.subHeader}>Total Bonus</Text>
-        </View>
-          {Object.entries(bonusData.total_bonus).map(([teamId, data]: [string, any]) => (
-            <View key={teamId} style={{flex:1, justifyContent:"space-between", flexDirection:"row", alignContent:"space-between", backgroundColor: "#0066ccff", padding: 8, borderRadius: 5, marginVertical: 2 }}>
-              <Text style={{fontSize: 14, fontWeight: "600", color: "white"}}>{data.team_name}: </Text>
-              <Text style={{fontSize: 14, fontWeight: "600", color: "white"}}>{Number(data.bonus ?? 0).toFixed(1)}M</Text>
-            </View>
-            ))}
-        <View style={{ alignItems: "center", backgroundColor: "#0047a3ff", padding: 10, borderRadius: 10, marginVertical: 10, marginTop:20 , marginBottom:2.5}}>
-          <Text style={styles.subHeader}>Weekly Details</Text>
-        </View>
+          {/* TOTAL BONUS */}
+
+          <View
+            style={{
+              backgroundColor: "#0047a3",
+              padding: 10,
+              borderRadius: 10,
+              marginBottom: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.subHeader}>
+              Total Bonus
+            </Text>
+          </View>
+
+          {bonusData.total_bonus.map((team, index) => (
+            <TouchableOpacity
+              key={team.team_id}
+              onPress={() => router.push(`/team/${team.team_id}`)}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                backgroundColor: "#0066cc",
+                padding: 8,
+                borderRadius: 5,
+                marginVertical: 2,
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Image
+                  source={{ uri: `${BASE_URL}${team.logo}` }}
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    marginRight: 8,
+                  }}
+                />
+
+                <Text style={{ color: "white", fontWeight: "600" }}>
+                  {team.team_name}
+                </Text>
+              </View>
+
+              <Text style={{ color: "white", fontWeight: "700" }}>
+                {team.bonus.toFixed(1)}M
+              </Text>
+            </TouchableOpacity>
+          ))}
+
+          {/* WEEKLY */}
+
+          <View
+            style={{
+              backgroundColor: "#0047a3",
+              padding: 10,
+              borderRadius: 10,
+              marginTop: 25,
+              marginBottom: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.subHeader}>
+              Weekly Bonus
+            </Text>
+          </View>
+
           {bonusData.weekly_details.map((week) => (
-            <View key={week.id} style={styles.weekCard}>
-              <Text style={styles.weekTitle}>Gameweek {week.gameweek}</Text>
-              {renderTeamList("Highest Point Teams", week.highest_point_teams)}
-              {renderPlayerList("Highest Point Players", week.highest_point_players)}
-              {renderPlayerList("Best Goalkeepers", week.highest_gk_players)}
-              {renderPlayerList("Best Defenders", week.highest_df_players)}
-              {renderPlayerList("Best Midfielders", week.highest_mf_players)}
-              {renderPlayerList("Best Forwards", week.highest_fw_players)}
-              {renderPlayerList("Team of the Week Bonus", week.special_bonus_players)}
+            <View
+              key={week.id}
+              style={styles.weekCard}
+            >
+              <Text style={styles.weekTitle}>
+                Gameweek {week.gameweek}
+              </Text>
+
+              {renderTeamList(
+                "Highest Point Teams",
+                week.highest_point_teams
+              )}
+
+              {renderPlayerList(
+                "Highest Point Players",
+                week.highest_point_players
+              )}
+
+              {renderPlayerList(
+                "Best Goalkeepers",
+                week.highest_gk_players
+              )}
+
+              {renderPlayerList(
+                "Best Defenders",
+                week.highest_df_players
+              )}
+
+              {renderPlayerList(
+                "Best Midfielders",
+                week.highest_mf_players
+              )}
+
+              {renderPlayerList(
+                "Best Forwards",
+                week.highest_fw_players
+              )}
+
+              {renderPlayerList(
+                "Team of the Week Bonus",
+                week.special_bonus_players
+              )}
             </View>
           ))}
+
+          {/* MONTHLY */}
+
+          <View
+            style={{
+              backgroundColor: "#0047a3",
+              padding: 10,
+              borderRadius: 10,
+              marginTop: 25,
+              marginBottom: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={styles.subHeader}>
+              Monthly Bonus
+            </Text>
+          </View>
+
+          {bonusData.monthly_bonus.length === 0 ? (
+            <Text
+              style={{
+                color: "#777",
+                textAlign: "center",
+              }}
+            >
+              No monthly bonus awarded.
+            </Text>
+          ) : (
+            bonusData.monthly_bonus.map((bonus) => (
+              <View
+                key={bonus.id}
+                style={{
+                  backgroundColor: "#082e63",
+                  borderRadius: 12,
+                  padding: 12,
+                  marginBottom: 10,
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <Image
+                  source={{
+                    uri: `${BASE_URL}${bonus.photo}`,
+                  }}
+                  style={{
+                    width: 55,
+                    height: 55,
+                    borderRadius: 28,
+                  }}
+                />
+
+                <View
+                  style={{
+                    flex: 1,
+                    marginLeft: 12,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#fff",
+                      fontWeight: "bold",
+                      fontSize: 16,
+                    }}
+                  >
+                    {bonus.player}
+                  </Text>
+
+                  <Text
+                    style={{
+                      color: "#00FFB2",
+                    }}
+                  >
+                    {bonus.team}
+                  </Text>
+
+                  <Text
+                    style={{
+                      color: "#ccc",
+                      marginTop: 2,
+                    }}
+                  >
+                    {bonus.category}
+                  </Text>
+
+                  <Text
+                    style={{
+                      color: "#888",
+                      fontSize: 12,
+                      marginTop: 2,
+                    }}
+                  >
+                    {bonus.month}
+                  </Text>
+                </View>
+
+                <Text
+                  style={{
+                    color: "#FFD700",
+                    fontSize: 18,
+                    fontWeight: "bold",
+                  }}
+                >
+                  +{bonus.bonus_amount.toFixed(1)}M
+                </Text>
+              </View>
+            ))
+          )}
         </View>
-      ) : (
-        <Text style={styles.noData}>No data available</Text>
       )}
     </ScrollView>
   );

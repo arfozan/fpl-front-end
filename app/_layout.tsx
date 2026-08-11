@@ -1,10 +1,16 @@
 // app/_layout.tsx
 import { Stack } from "expo-router";
+import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { AuthProvider, useAuth } from "../context/AuthContext";
+import { initializeFirebaseMessaging } from "../services/firebaseMessaging";
 
 function AuthenticatedLayout() {
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    initializeFirebaseMessaging();
+  }, []);
 
   if (loading) {
     return (
