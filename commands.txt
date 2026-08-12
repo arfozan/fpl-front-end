@@ -3,3 +3,4 @@ npx expo run:android
 
 
 APK Production build
+gradlew.bat assembleRelease

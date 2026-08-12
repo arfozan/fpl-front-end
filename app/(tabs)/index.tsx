@@ -309,34 +309,52 @@ useEffect(() => {
           )}
           </View>
         </LinearGradient>
-{/* ✅ Stories Section */}
-{stories.length > 0 && (
+      {/* ✅ Stories Section */}
+      {stories.length > 0 && (
         <View style={{ paddingVertical: 10 }}>
-          <Text style={{ marginLeft: 15, marginBottom: 8, fontSize: 16, fontWeight: "700" }}>
+          <Text
+            style={{
+              marginLeft: 15,
+              marginBottom: 8,
+              fontSize: 16,
+              fontWeight: "700",
+            }}
+          >
             Stories
           </Text>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingLeft: 10 }}>
-            {stories.map((entry) => {
-              const isViewed = entry.stories.every((s: any) => viewedStories.includes(s.id));
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ paddingLeft: 10 }}
+          >
+            {stories.flatMap((entry: any) =>
+              entry.groups
+                .filter((group: any) => group.stories?.length > 0)
+                .map((group: any) => {
+                  const isViewed = group.stories.every((s: any) =>
+                    viewedStories.includes(s.id)
+                  );
 
-              return (
-                <StoryBubble
-                  key={entry.user.id}
-                  entry={entry}
-                  router={router}
-                  isViewed={isViewed}
-                  onPress={() => {
-                    router.push({
-                      pathname: "/story-viewer",
-                      params: { userId: entry.user.id },
-                    });
-                    const storyIds = entry.stories.map((s: any) => s.id);
-                    markStoriesAsViewed(storyIds);
-                  }}
-                />
-              );
-            })}
+                  return (
+                    <StoryBubble
+                      key={group.id}
+                      entry={entry}
+                      group={group}
+                      isViewed={isViewed}
+                      onPress={() => {
+                        router.push(`/story-viewer?userId=${entry.user.id}`);
+
+                        const storyIds = group.stories.map(
+                          (s: any) => s.id
+                        );
+
+                        markStoriesAsViewed(storyIds);
+                      }}
+                    />
+                  );
+                })
+            )}
           </ScrollView>
         </View>
       )}

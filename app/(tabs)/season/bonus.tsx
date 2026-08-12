@@ -207,22 +207,21 @@ export default function BonusScreen() {
               marginBottom: 5,
             }}
           >
-            <Text style={styles.playerText}>
+            <Text style={[styles.playerText, { flex: 1 }]}>
               • {p.first_name} {p.last_name} ({p.position})
             </Text>
 
-            <Image
-              source={{ uri: `${BASE_URL}/api${p.logo}` }}
+            <View
               style={{
-                width: 20,
-                height: 20,
-                marginHorizontal: 8,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "flex-end",
               }}
-            />
-
-            <Text style={styles.teamName}>
-              {p.team_name}
-            </Text>
+            >
+              <Text style={styles.teamName}>
+                {p.team_name}
+              </Text>
+            </View>
           </View>
         ))}
       </View>

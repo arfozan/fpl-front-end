@@ -1,3 +1,4 @@
+
 import { BASE_URL } from "@/config";
 import { Video } from "expo-av";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -15,38 +16,81 @@ import {
 } from "react-native";
 
 const { width, height } = Dimensions.get("window");
+
 export default function StoryViewer() {
   const router = useRouter();
-  const { userId } = useLocalSearchParams();
+
+  const { userId } = useLocalSearchParams<{ userId?: string }>();
 
   const [stories, setStories] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const progress = useRef(new Animated.Value(0)).current;
+  const [loading, setLoading] = useState(true);
 
+  const progress = useRef(new Animated.Value(0)).current;
   const videoRef = useRef<Video | null>(null);
 
-  // Load stories from feed
-  const loadStories = async () => {
+  // --------------------------------------------------
+  // LOAD STORIES
+  // --------------------------------------------------
+
+  const loadStories = async (id: string) => {
     try {
+      setLoading(true);
+
       const res = await fetch(`${BASE_URL}/api/stories-feed/`);
-      if (!res.ok) return;
+
+      if (!res.ok) {
+        console.log("Story feed failed:", res.status);
+        return;
+      }
 
       const feed = await res.json();
-      const entry = feed.find((item: any) => item.user.id == userId);
 
-      if (entry) setStories(entry.stories);
-    } catch (err) {
-      console.log("Error loading stories:", err);
+      console.log("STORY FEED:", JSON.stringify(feed, null, 2));
+      console.log("LOOKING FOR USER:", id);
+
+      const entry = feed.find(
+        (item: any) => String(item.user.id) === String(id)
+      );
+
+      if (!entry) {
+        console.log("No story entry found for user:", id);
+        return;
+      }
+
+      const allStories = entry.groups
+        .filter((group: any) => group.stories?.length > 0)
+        .flatMap((group: any) => group.stories);
+
+      console.log("FOUND STORIES:", allStories.length);
+
+      setStories(allStories);
+      setCurrentIndex(0);
+    } catch (error) {
+      console.log("Error loading stories:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadStories();
-  }, []);
+    if (!userId) {
+      console.log("No userId received");
+      return;
+    }
+
+    console.log("USER ID:", userId);
+
+    loadStories(userId);
+  }, [userId]);
+
+  // --------------------------------------------------
+  // NAVIGATION
+  // --------------------------------------------------
 
   const nextStory = () => {
     if (currentIndex < stories.length - 1) {
-      setCurrentIndex((i) => i + 1);
+      setCurrentIndex((index) => index + 1);
     } else {
       router.back();
     }
@@ -54,70 +98,219 @@ export default function StoryViewer() {
 
   const prevStory = () => {
     if (currentIndex > 0) {
-      setCurrentIndex((i) => i - 1);
-    } else {
-      router.back();
+      setCurrentIndex((index) => index - 1);
     }
   };
 
-  // Start progress bar animation
+  // --------------------------------------------------
+  // PROGRESS
+  // --------------------------------------------------
+
   const startProgress = (duration: number) => {
+    progress.stopAnimation();
     progress.setValue(0);
+
     Animated.timing(progress, {
       toValue: 1,
       duration,
       useNativeDriver: false,
     }).start(({ finished }) => {
-      if (finished) nextStory();
+      if (finished) {
+        nextStory();
+      }
     });
   };
 
-  // Handle progress for text & images
+  // --------------------------------------------------
+  // CURRENT STORY
+  // --------------------------------------------------
+
   useEffect(() => {
-    if (stories.length === 0) return;
+    if (!stories.length) return;
 
     const story = stories[currentIndex];
 
-    // Text-only story
+    if (!story) return;
+
+    console.log("CURRENT STORY:", story.id);
+    console.log("MEDIA:", story.media);
+
     if (!story.media) {
       startProgress(5000);
       return;
     }
 
-    // Lowercase once safely
-    const media = story.media.toLowerCase();
-    const isVideo = media.endsWith(".mp4") || media.endsWith(".mov");
+    const media = String(story.media).toLowerCase();
 
-    // Images get fixed 5s duration
+    const isVideo =
+      media.endsWith(".mp4") ||
+      media.endsWith(".mov") ||
+      media.endsWith(".m4v");
+
     if (!isVideo) {
       startProgress(5000);
     }
   }, [stories, currentIndex]);
 
-  if (stories.length === 0) return null;
+  // --------------------------------------------------
+  // LOADING
+  // --------------------------------------------------
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading story...</Text>
+      </View>
+    );
+  }
+
+  // --------------------------------------------------
+  // NO STORIES
+  // --------------------------------------------------
+
+  if (stories.length === 0) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>No stories found.</Text>
+
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.closeText}>Close</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   const story = stories[currentIndex];
 
-  // Safe checks
   const hasMedia = !!story.media;
-  const media = hasMedia ? story.media.toLowerCase() : "";
-  const isVideo = hasMedia && (media.endsWith(".mp4") || media.endsWith(".mov"));
+
+  const media = hasMedia
+    ? String(story.media).toLowerCase()
+    : "";
+
+  const isVideo =
+    hasMedia &&
+    (
+      media.endsWith(".mp4") ||
+      media.endsWith(".mov") ||
+      media.endsWith(".m4v")
+    );
+
+  const mediaUrl = hasMedia
+    ? `${BASE_URL}${story.media}`
+    : null;
+
+  console.log("RENDER STORY:", story.id);
+  console.log("MEDIA URL:", mediaUrl);
+  console.log("IS VIDEO:", isVideo);
+
+  // --------------------------------------------------
+  // RENDER
+  // --------------------------------------------------
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" translucent backgroundColor="transparent" />
-      {/* Progress bars */}
+      <StatusBar
+        style="light"
+        translucent
+        backgroundColor="transparent"
+      />
+
+      {/* STORY MEDIA */}
+      <View style={styles.mediaWrapper}>
+        {hasMedia ? (
+          isVideo ? (
+            <Video
+              ref={videoRef}
+              source={{
+                uri: mediaUrl!,
+              }}
+              style={styles.media}
+              resizeMode="contain"
+              shouldPlay
+              isLooping={false}
+              onLoad={(status) => {
+                if (
+                  status &&
+                  "durationMillis" in status &&
+                  typeof status.durationMillis === "number"
+                ) {
+                  console.log(
+                    "VIDEO DURATION:",
+                    status.durationMillis
+                  );
+
+                  startProgress(status.durationMillis);
+                }
+              }}
+              onPlaybackStatusUpdate={(status) => {
+                if (
+                  "didJustFinish" in status &&
+                  status.didJustFinish
+                ) {
+                  nextStory();
+                }
+              }}
+              onError={(error) => {
+                console.log("VIDEO ERROR:", error);
+              }}
+            />
+          ) : (
+            <Image
+              source={{
+                uri: mediaUrl!,
+              }}
+              style={styles.media}
+              resizeMode="contain"
+              onLoad={() => {
+                console.log(
+                  "IMAGE LOADED:",
+                  mediaUrl
+                );
+              }}
+              onError={(error) => {
+                console.log(
+                  "IMAGE ERROR:",
+                  error.nativeEvent
+                );
+              }}
+            />
+          )
+        ) : (
+          <View
+            style={[
+              styles.textStory,
+              {
+                backgroundColor:
+                  story.bg_color || "#000",
+              },
+            ]}
+          >
+            <Text style={styles.storyText}>
+              {story.text}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* PROGRESS BARS */}
       <View style={styles.progressContainer}>
-        {stories.map((_, i) => (
-          <View key={i} style={styles.progressBarBackground}>
+        {stories.map((_: any, index: number) => (
+          <View
+            key={index}
+            style={styles.progressBarBackground}
+          >
             <Animated.View
               style={[
                 styles.progressBar,
                 {
                   width:
-                    i < currentIndex
+                    index < currentIndex
                       ? "100%"
-                      : i === currentIndex
+                      : index === currentIndex
                       ? progress.interpolate({
                           inputRange: [0, 1],
                           outputRange: ["0%", "100%"],
@@ -130,97 +323,144 @@ export default function StoryViewer() {
         ))}
       </View>
 
-      {/* Tap zones */}
-      <View style={styles.touchContainer}>
-        <Pressable style={{ flex: 1 }} onPress={prevStory} />
-        <Pressable style={{ flex: 1 }} onPress={nextStory} />
-      </View>
-
-      {/* Story Content */}
-      <View style={styles.mediaWrapper}>
-        {hasMedia ? (
-          isVideo ? (
-            <Video
-              ref={videoRef}
-              source={{ uri: `${BASE_URL}${story.media}` }}
-              resizeMode="contain"
-              style={{ width, height, backgroundColor: "#000" }}
-              shouldPlay
-              onLoad={(status) => {
-                if (
-                  status &&
-                  "durationMillis" in status &&
-                  typeof status.durationMillis === "number"
-                ) {
-                  startProgress(status.durationMillis);
-                }
-              }}
-              onPlaybackStatusUpdate={(status) => {
-                if ("didJustFinish" in status && status.didJustFinish) {
-                  nextStory();
-                }
-              }}
-            />
-          ) : (
-            <Image
-              source={{ uri: `${BASE_URL}${story.media}` }}
-              style={{ width, height, resizeMode: "contain", backgroundColor: "#000" }}
-            />
-          )
-        ) : (
-          // ✅ Text-only story
-          <View
-            style={{
-              width,
-              height,
-              backgroundColor: story.bg_color || "#000",
-              justifyContent: "center",
-              alignItems: "center",
-              padding: 20,
-            }}
-          >
-            <Text style={{ fontSize: 28, color: "#fff", textAlign: "center" }}>
-              {story.text}
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Back button */}
+      {/* CLOSE BUTTON */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{ fontSize: 26, color: "#fff" }}>✕</Text>
+        <TouchableOpacity
+          onPress={() => router.back()}
+        >
+          <Text style={styles.closeIcon}>✕</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* LEFT / RIGHT TAP AREAS */}
+      <View style={styles.touchContainer}>
+        <Pressable
+          style={styles.leftTouch}
+          onPress={prevStory}
+        />
+
+        <Pressable
+          style={styles.rightTouch}
+          onPress={nextStory}
+        />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000" },
-  mediaWrapper: { position: "absolute", width, height, top: 0, left: 0 },
-  header: { position: "absolute", top: 40, left: 20, zIndex: 50, elevation: 50 },
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  loadingText: {
+    color: "#fff",
+    fontSize: 18,
+  },
+
+  mediaWrapper: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width,
+    height,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#000",
+  },
+
+  media: {
+    width,
+    height,
+  },
+
+  textStory: {
+    width,
+    height,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+
+  storyText: {
+    color: "#fff",
+    fontSize: 28,
+    textAlign: "center",
+  },
+
   progressContainer: {
     position: "absolute",
     top: 20,
+    left: 0,
     width: "100%",
     flexDirection: "row",
     paddingHorizontal: 8,
-    zIndex: 20,
+    zIndex: 100,
+    elevation: 100,
   },
+
   progressBarBackground: {
     flex: 1,
-    backgroundColor: "rgba(255,255,255,0.3)",
     height: 3,
+    backgroundColor: "rgba(255,255,255,0.3)",
     borderRadius: 3,
     marginHorizontal: 2,
   },
-  progressBar: { height: 3, backgroundColor: "#fff", borderRadius: 3 },
-  touchContainer: {
-    flexDirection: "row",
+
+  progressBar: {
+    height: 3,
+    backgroundColor: "#fff",
+    borderRadius: 3,
+  },
+
+  header: {
     position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 200,
+    elevation: 200,
+  },
+
+  closeIcon: {
+    fontSize: 26,
+    color: "#fff",
+  },
+
+  closeButton: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: "#444",
+    borderRadius: 10,
+  },
+
+  closeText: {
+    color: "#fff",
+  },
+
+  touchContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
     width,
     height,
-    zIndex: 30,
+    flexDirection: "row",
+    zIndex: 50,
+  },
+
+  leftTouch: {
+    flex: 1,
+  },
+
+  rightTouch: {
+    flex: 1,
   },
 });

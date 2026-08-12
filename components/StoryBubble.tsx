@@ -4,12 +4,18 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Image, Text, TouchableOpacity, View } from "react-native";
 
 interface StoryBubbleProps {
-  entry: any;       // story entry from backend
-  isViewed: boolean; // true if story already viewed
+  entry: any;
+  group: any;
+  isViewed: boolean;
   onPress: () => void;
 }
 
-export default function StoryBubble({ entry, isViewed, onPress }: StoryBubbleProps) {
+export default function StoryBubble({
+  entry,
+  group,
+  isViewed,
+  onPress,
+}: StoryBubbleProps) {
   const rotation = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -54,7 +60,13 @@ export default function StoryBubble({ entry, isViewed, onPress }: StoryBubblePro
   });
 
   // Use latest story media as thumbnail; fallback to user logo; fallback to placeholder
-  const latestStory = entry.stories?.[0];
+  const latestStory = group.stories?.[0];
+
+  const latestGroup = entry.groups?.find(
+    (group: any) => group.stories?.length > 0
+  );
+
+  const storyTitle = latestGroup?.title || "Story";
 
   const thumbnailUri =
     latestStory?.thumbnail
@@ -138,7 +150,7 @@ export default function StoryBubble({ entry, isViewed, onPress }: StoryBubblePro
     }}
     numberOfLines={1}
   >
-    {entry.user.name}
+    {storyTitle}
   </Text>
 </TouchableOpacity>
   );

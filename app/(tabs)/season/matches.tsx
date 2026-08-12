@@ -19,10 +19,10 @@ interface Team {
 
 interface Match {
   match_id: number;
-  home_team: Team;
-  away_team: Team;
-  home_score: number;
-  away_score: number;
+  home_team: Team | null;
+  away_team: Team | null;
+  home_score: number | null;
+  away_score: number | null;
 }
 
 interface Round {
@@ -108,31 +108,32 @@ export default function MatchesScreen() {
 
   // ========== Filter Rounds ==========
   const filteredRounds: Round[] =
-    selectedSeason && Array.isArray(selectedSeason.rounds)
-      ? [...selectedSeason.rounds]
-          // Latest Gameweek first
-          .sort((a, b) => b.round_number - a.round_number)
+    selectedSeason?.rounds
+      ?.map((round) => {
+        const matches =
+          selectedTeam === "all"
+            ? round.matches.filter(
+                (match) =>
+                  match.home_team?.id !== null &&
+                  match.away_team?.id !== null
+              )
+            : round.matches.filter(
+                (match) =>
+                  match.home_team?.id !== null &&
+                  match.away_team?.id !== null &&
+                  (
+                    match.home_team.id === selectedTeam ||
+                    match.away_team.id === selectedTeam
+                  )
+              );
 
-          // Hide rounds with no matches
-          .filter((round) => round.matches && round.matches.length > 0)
-
-          // Apply team filter
-          .map((round: Round) => ({
-            ...round,
-            matches:
-              selectedTeam === "all"
-                ? round.matches
-                : round.matches.filter(
-                    (m: Match) =>
-                      m.home_team.id === selectedTeam ||
-                      m.away_team.id === selectedTeam
-                  ),
-          }))
-
-          // If a team is selected, also hide rounds where
-          // that team has no match
-          .filter((round) => round.matches.length > 0)
-      : [];
+      return {
+        ...round,
+        matches,
+      };
+    })
+    .filter((round) => round.matches.length > 0)
+    .sort((a, b) => b.round_number - a.round_number) ?? [];
 
   if (loading) {
     return (
