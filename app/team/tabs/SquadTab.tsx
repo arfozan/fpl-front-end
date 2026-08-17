@@ -6,6 +6,7 @@ interface Player {
   id: number;
   full_name: string;
   position: string;
+  is_active: boolean;
   club_name: string;
   photo: string;
   weekly_wage: number;
@@ -68,7 +69,7 @@ export default function SquadTab({ team }: { team: TeamDetail }) {
       <Link href={`/team/player/${item.id}`} asChild>
         <TouchableOpacity style={{
           backgroundColor:
-            item.weekly_wage === 0
+            item.is_active === false
             ? "#ff4d4d"
             :"#ffffffff", 
           marginVertical: 4,

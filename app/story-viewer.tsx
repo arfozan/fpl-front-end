@@ -20,7 +20,10 @@ const { width, height } = Dimensions.get("window");
 export default function StoryViewer() {
   const router = useRouter();
 
-  const { userId } = useLocalSearchParams<{ userId?: string }>();
+  const { userId, groupId } = useLocalSearchParams<{
+    userId?: string;
+    groupId?: string;
+  }>();
 
   const [stories, setStories] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -33,56 +36,83 @@ export default function StoryViewer() {
   // LOAD STORIES
   // --------------------------------------------------
 
-  const loadStories = async (id: string) => {
-    try {
-      setLoading(true);
+  const loadStories = async (userId: string, groupId: string) => {
+  try {
+    setLoading(true);
 
-      const res = await fetch(`${BASE_URL}/api/stories-feed/`);
+    const res = await fetch(`${BASE_URL}/api/stories-feed/`);
 
-      if (!res.ok) {
-        console.log("Story feed failed:", res.status);
-        return;
-      }
-
-      const feed = await res.json();
-
-      console.log("STORY FEED:", JSON.stringify(feed, null, 2));
-      console.log("LOOKING FOR USER:", id);
-
-      const entry = feed.find(
-        (item: any) => String(item.user.id) === String(id)
-      );
-
-      if (!entry) {
-        console.log("No story entry found for user:", id);
-        return;
-      }
-
-      const allStories = entry.groups
-        .filter((group: any) => group.stories?.length > 0)
-        .flatMap((group: any) => group.stories);
-
-      console.log("FOUND STORIES:", allStories.length);
-
-      setStories(allStories);
-      setCurrentIndex(0);
-    } catch (error) {
-      console.log("Error loading stories:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!userId) {
-      console.log("No userId received");
+    if (!res.ok) {
+      console.log("Story feed failed:", res.status);
       return;
     }
 
-    console.log("USER ID:", userId);
+    const feed = await res.json();
 
-    loadStories(userId);
-  }, [userId]);
+    console.log("STORY FEED:", JSON.stringify(feed, null, 2));
+    console.log("LOOKING FOR USER:", userId);
+    console.log("LOOKING FOR GROUP:", groupId);
+
+    // Find user
+    const entry = feed.find(
+      (item: any) => String(item.user.id) === String(userId)
+    );
+
+    if (!entry) {
+      console.log("No story entry found for user:", userId);
+      return;
+    }
+
+    // Find the exact group that was tapped
+    const group = entry.groups.find(
+      (item: any) => String(item.id) === String(groupId)
+    );
+
+    if (!group) {
+      console.log(
+        "No story group found:",
+        groupId
+      );
+      return;
+    }
+
+    console.log("FOUND GROUP:", group.id);
+    console.log("GROUP TITLE:", group.title);
+    console.log(
+      "GROUP STORIES:",
+      group.stories?.length
+    );
+
+    const groupStories = group.stories
+      ?.filter((story: any) => story)
+      ?? [];
+
+    console.log(
+      "FOUND STORIES:",
+      groupStories.length
+    );
+
+    setStories(groupStories);
+    setCurrentIndex(0);
+
+  } catch (error) {
+    console.log("Error loading stories:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  useEffect(() => {
+    if (!userId || !groupId) {
+      console.log(
+        "Missing userId or groupId:",
+        { userId, groupId }
+      );
+      return;
+    }
+
+  loadStories(userId, groupId);
+}, [userId, groupId]);
 
   // --------------------------------------------------
   // NAVIGATION

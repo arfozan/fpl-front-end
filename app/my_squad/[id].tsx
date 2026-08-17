@@ -1,7 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -42,6 +42,7 @@ interface PlayerDetail {
   id: number;
   full_name: string;
   photo: string;
+  is_active: boolean;
   club_name: string;
   position: string;
   team_name: string;
@@ -110,31 +111,73 @@ export default function PlayerDetailScreen() {
         ? "Move this player to the Main Team?"
         : "Move this player to the Academy?",
       [
-        { text: "Cancel", style: "cancel" },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
         {
           text: "Yes",
           onPress: async () => {
             try {
               const res = await fetchWithAuth(
                 `${BASE_URL}/api/players/${id}/toggle-academy/`,
-                { method: "POST" }
+                {
+                  method: "POST",
+                }
               );
+
               if (!res.ok) {
                 const errorData = await res.json();
-                if (errorData.error === "Player is locked and cannot be toggled") {
-                  alert("Player is Locked. Try on Next Transfer.");
+
+                if (
+                  errorData.error ===
+                  "Player is locked and cannot be toggled"
+                ) {
+                  Alert.alert(
+                    "Player Locked",
+                    "This player is locked. Try again during the next transfer window."
+                  );
                 } else {
-                  alert("Toggle failed: " + errorData.error);
+                  Alert.alert(
+                    "Error",
+                    "Toggle failed: " +
+                      (errorData.error || "Unknown error")
+                  );
                 }
+
                 return;
               }
+
               const data = await res.json();
+
               setPlayer((prev) =>
-                prev ? { ...prev, is_academy_player: data.is_academy_player } : prev
+                prev
+                  ? {
+                      ...prev,
+                      is_academy_player:
+                        data.is_academy_player,
+                    }
+                  : prev
               );
-              alert("Player moved successfully!");
+
+              Alert.alert(
+                "Success",
+                "Player moved successfully!",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => router.back(),
+                  },
+                ],
+                { cancelable: false }
+              );
             } catch (err) {
               console.error("Toggle academy error:", err);
+
+              Alert.alert(
+                "Error",
+                "Something went wrong while moving the player."
+              );
             }
           },
         },
@@ -144,7 +187,10 @@ export default function PlayerDetailScreen() {
 
   const handleExtendContract = async () => {
     if (!selectedWindowId) {
-      alert("Please select a transfer window first");
+      Alert.alert(
+        "Select Transfer Window",
+        "Please select a transfer window first."
+      );
       return;
     }
 
@@ -152,7 +198,10 @@ export default function PlayerDetailScreen() {
       "Extend Contract",
       "Are you sure you want to extend this player's contract?",
       [
-        { text: "Cancel", style: "cancel" },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
         {
           text: "Yes",
           onPress: async () => {
@@ -161,24 +210,64 @@ export default function PlayerDetailScreen() {
                 `${BASE_URL}/api/players/${id}/extend-contract/`,
                 {
                   method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ transfer_window_id: Number(selectedWindowId) }),
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    transfer_window_id: Number(selectedWindowId),
+                  }),
                 }
               );
+
               if (!res.ok) {
                 const errorData = await res.json();
+
                 const message =
-                  errorData.error || errorData.detail || "Unknown error occurred";
-                alert("Contract extension failed:\n" + message);
+                  errorData.error ||
+                  errorData.detail ||
+                  "Unknown error occurred";
+
+                Alert.alert(
+                  "Contract Extension Failed",
+                  message
+                );
+
                 return;
               }
+
               const data = await res.json();
+
               setPlayer((prev) =>
-                prev ? { ...prev, contract_expiry: data.contract_expiry } : prev
+                prev
+                  ? {
+                      ...prev,
+                      contract_expiry:
+                        data.contract_expiry,
+                    }
+                  : prev
               );
-              alert("Contract extended successfully!");
+
+              Alert.alert(
+                "Success",
+                "Contract extended successfully!",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => router.back(),
+                  },
+                ],
+                { cancelable: false }
+              );
             } catch (err) {
-              console.error("Extend contract error:", err);
+              console.error(
+                "Extend contract error:",
+                err
+              );
+
+              Alert.alert(
+                "Error",
+                "Something went wrong while extending the contract."
+              );
             }
           },
         },
@@ -191,7 +280,10 @@ export default function PlayerDetailScreen() {
       "Release Player",
       "Are you sure you want to release this player? This action cannot be undone.",
       [
-        { text: "Cancel", style: "cancel" },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
         {
           text: "Yes, Release",
           style: "destructive",
@@ -199,19 +291,43 @@ export default function PlayerDetailScreen() {
             try {
               const res = await fetchWithAuth(
                 `${BASE_URL}/api/players/${id}/release_player/`,
-                { method: "POST" }
+                {
+                  method: "POST",
+                }
               );
+
               if (!res.ok) {
                 const errorData = await res.json();
-                alert("Release failed: " + (errorData.error || "Unknown error"));
+
+                Alert.alert(
+                  "Release Failed",
+                  errorData.error || "Unknown error"
+                );
+
                 return;
               }
-              alert("Player released successfully!");
-              setPlayer((prev) =>
-                prev ? { ...prev, team_name: "Free Agent" } : prev
+
+              Alert.alert(
+                "Success",
+                "Player released successfully!",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => router.back(),
+                  },
+                ],
+                { cancelable: false }
               );
             } catch (err) {
-              console.error("Release player error:", err);
+              console.error(
+                "Release player error:",
+                err
+              );
+
+              Alert.alert(
+                "Error",
+                "Something went wrong while releasing the player."
+              );
             }
           },
         },
@@ -232,7 +348,7 @@ export default function PlayerDetailScreen() {
               imageStyle={{ borderRadius: 16 }}
             >
               {/* 🔴 Red gradient overlay if player is unavailable */}
-              {player.weekly_wage === 0 && (
+              {player.is_active === false && (
                 <LinearGradient
                   colors={["rgba(255,0,0,0.6)", "rgba(255,0,0,0.1)", "transparent"]}
                   style={StyleSheet.absoluteFillObject}
@@ -304,7 +420,7 @@ export default function PlayerDetailScreen() {
                   { backgroundColor: "#1976d2" },
                   !hasContractOpenWindow && { opacity: 0.5 },
                 ]}
-                disabled={!handleExtendContract}
+                disabled={!hasContractOpenWindow}
                 onPress={handleToggleAcademy}
               >
                 <MaterialIcons
@@ -319,8 +435,9 @@ export default function PlayerDetailScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: "#d32f2f" }]}
+                style={[styles.actionButton, { backgroundColor: "#d32f2f" }, player.is_active && { opacity: 0.5 },]}
                 onPress={handleReleasePlayer}
+                disabled={player.is_active}
               >
                 <MaterialIcons
                   name="logout"
@@ -334,15 +451,21 @@ export default function PlayerDetailScreen() {
 
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Contract Extension</Text>
+
               <Picker
                 selectedValue={selectedWindowId ?? 0}
                 onValueChange={(itemValue) =>
-                  setSelectedWindowId(itemValue === 0 ? null : Number(itemValue))
+                  setSelectedWindowId(
+                    itemValue === 0 ? null : Number(itemValue)
+                  )
                 }
-                enabled={hasContractOpenWindow}
-                style={{color:'#8b8b8bff'}}
+                style={{ color: "#8b8b8bff" }}
               >
-                <Picker.Item label="Select Contract Length..." value={0} />
+                <Picker.Item
+                  label="Select Contract Length..."
+                  value={0}
+                />
+
                 {windows.map((w) => (
                   <Picker.Item
                     key={w.id}
@@ -355,9 +478,9 @@ export default function PlayerDetailScreen() {
               <TouchableOpacity
                 style={[
                   styles.extendButton,
-                  (!selectedWindowId || !hasContractOpenWindow) && { opacity: 0.6 },
+                  !selectedWindowId && { opacity: 0.6 },
                 ]}
-                disabled={!selectedWindowId || !hasContractOpenWindow}
+                disabled={!selectedWindowId}
                 onPress={handleExtendContract}
               >
                 <Text style={{ color: "#fff", fontWeight: "600" }}>
@@ -365,7 +488,6 @@ export default function PlayerDetailScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
-
             <View style={styles.sectionHeader}>
               <Text style={styles.cardTitle}>Transfer History</Text>
             </View>

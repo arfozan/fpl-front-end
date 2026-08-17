@@ -1,8 +1,8 @@
 import RefreshableWrapper from "@/components/RefreshableWrapper";
 import { BASE_URL } from "@/config";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -53,9 +53,13 @@ export default function MyTeam() {
     }
   };
 
-  useEffect(() => {
-    fetchTeamData();
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchTeamData();
+      }
+    }, [user])
+  );
 
   useEffect(() => {
     Animated.timing(fadeAnim, {

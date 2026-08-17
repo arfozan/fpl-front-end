@@ -1,8 +1,8 @@
 import RefreshableWrapper from "@/components/RefreshableWrapper";
 import { BASE_URL } from "@/config";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { Link, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../context/AuthContext";
 
@@ -10,6 +10,7 @@ type Player = {
   id: number;
   full_name: string;
   position: string;
+  is_active: boolean;
   photo?: string | null;
   weekly_wage?: number;
   is_loan?: boolean;
@@ -91,11 +92,13 @@ export default function Squad() {
     }
   };
 
-// ✅ Now just call it here
-useEffect(() => {
-  if (user) loadPlayers();
-}, [user]);
-
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        loadPlayers();
+      }
+    }, [user])
+  );
 
   if (loading) {
     return (
@@ -105,7 +108,7 @@ useEffect(() => {
     );
   }
   return (
-    <RefreshableWrapper onRefresh={{loadPlayers}}>
+    <RefreshableWrapper onRefresh={loadPlayers}>
       <LinearGradient
         colors={['#d6bb42ff', '#9e1818ff']} // startColor, endColor
         start={{ x: 0, y: 0 }}
@@ -131,7 +134,7 @@ useEffect(() => {
                     flexDirection: "row",
                     alignItems: "center",
                     backgroundColor:
-                      item.weekly_wage === 0
+                      item.is_active === false
                       ? "#ff4d4d" // 🔴 strong red: unavailable
                       : !item.contract_expiry
                       ? "#fdd054ff" // 🔸 light red: no contract yet

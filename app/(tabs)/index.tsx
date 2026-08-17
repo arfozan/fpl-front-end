@@ -4,8 +4,8 @@ import StoryBubble from "@/components/StoryBubble";
 import { BASE_URL } from "@/config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -126,16 +126,22 @@ export default function index() {
   const [stories, setStories] = useState([]);
   const [viewedStories, setViewedStories] = useState<number[]>([]);
 
-useEffect(() => {
-  (async () => {
-    try {
-      const stored = await AsyncStorage.getItem("viewedStories");
-      if (stored) setViewedStories(JSON.parse(stored));
-    } catch (err) {
-      console.error("Failed to load viewed stories:", err);
-    }
-  })();
-}, []);
+  useEffect(() => {
+    (async () => {
+      try {
+        const stored = await AsyncStorage.getItem("viewedStories");
+        if (stored) setViewedStories(JSON.parse(stored));
+      } catch (err) {
+        console.error("Failed to load viewed stories:", err);
+      }
+    })();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [user])
+  );
 
   const loadStories = async () => {
     try {
@@ -343,7 +349,13 @@ useEffect(() => {
                       group={group}
                       isViewed={isViewed}
                       onPress={() => {
-                        router.push(`/story-viewer?userId=${entry.user.id}`);
+                        router.push({
+                          pathname: "/story-viewer",
+                          params: {
+                            userId: String(entry.user.id),
+                            groupId: String(group.id),
+                          },
+                        });
 
                         const storyIds = group.stories.map(
                           (s: any) => s.id
